@@ -1,6 +1,6 @@
 # applied-computational-intelligence
 
-Homework 1 de Inteligência Computacional Aplicada (ICA) - análise exploratória do dataset de risco de diabetes (Alternativa 7 do enunciado).
+Homework 1 de Inteligência Computacional Aplicada (ICA) - análise exploratória do dataset de risco de diabetes.
 
 ## Como rodar
 
