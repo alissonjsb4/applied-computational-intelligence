@@ -8,10 +8,10 @@ Ferramenta utilizada: **Claude** (Anthropic), nas versões Sonnet 5 e Opus 5,
 através do Claude Code.
 
 Cada entrada abaixo registra o que foi pedido, o que a ferramenta devolveu e o
-que os autores fizeram com aquilo. Os prompts estão transcritos com correção de
-digitação e pontuação, mantendo o conteúdo do que foi pedido. As respostas eram
-longas, então estão resumidas, com indicação de onde o resultado foi parar no
-repositório, que é o registro verificável.
+que os autores fizeram com aquilo. Os prompts foram transcritos em registro
+uniforme, preservando integralmente o conteúdo de cada solicitação. As respostas
+eram extensas e estão resumidas, com indicação de onde o resultado foi
+incorporado ao repositório, que é o registro verificável.
 
 ---
 
@@ -35,9 +35,8 @@ repositório local e ao dataset.
 
 ### 1. Levantamento do estado do trabalho
 
-**Prompt:** "Procura no meu computador o repositório do trabalho de ICA,
-`applied-computational-intelligence`. Vê o que está faltando do trabalho que eu
-possa fazer."
+**Prompt:** "Localizar no computador o repositório do trabalho de ICA,
+`applied-computational-intelligence`, e levantar o que ainda falta ser feito."
 
 **Resposta:** a ferramenta localizou o repositório no GitHub, clonou, leu o PDF
 do enunciado e o notebook, e listou as pendências: ausência do artigo em PDF,
@@ -50,8 +49,8 @@ grupo por WhatsApp.
 
 ### 2. Leitura do histórico de commits
 
-**Prompt:** "O Matheus disse que fez coisas às duas da manhã. O que ele fez?
-O que são esses commits?"
+**Prompt:** "Descrever o conteúdo dos dois commits mais recentes do
+repositório e o que cada um alterou."
 
 **Resposta:** resumo dos dois commits, incluindo a correção do erro de digitação
 `Conutry` para `Country`, que impedia a análise condicional por país de
@@ -61,8 +60,8 @@ executar.
 
 ### 3. Verificação da escolha da variável de classe
 
-**Prompt:** "Não entendi a necessidade da troca da classe. Me explica melhor o
-que está faltando e o que a gente já tem pronto."
+**Prompt:** "Explicar por que a variável de classe precisaria ser trocada, e
+qual o estado de cada uma das cinco questões do enunciado."
 
 **Resposta:** explicação de que a classe pedida pelo enunciado é uma coluna de
 rótulo, e não o conjunto de valores distintos das colunas qualitativas; e de que
@@ -73,8 +72,8 @@ rótulo, discutida e acordada no grupo.
 
 ### 4. Quantificação do poder discriminativo
 
-**Prompt:** "Compara o quanto cada preditor separa as classes quando se agrupa
-por gênero e quando se agrupa por risco de diabetes."
+**Prompt:** "Comparar quanto cada preditor separa as classes sob dois
+agrupamentos alternativos: por gênero e por risco de diabetes."
 
 **Resposta:** execução de um script sobre o dataset, retornando a amplitude
 entre médias de classe normalizada pelo desvio padrão de cada preditor. Por
@@ -87,8 +86,9 @@ Tabela de poder discriminativo do artigo, regerada pelo script
 
 ### 5. Correção e execução do notebook
 
-**Prompt:** "Troca a classe para `Diabetes_Risk` nas questões 3, 4 e 5, roda o
-notebook inteiro e sobe numa branch."
+**Prompt:** "Substituir a variável de classe por `Diabetes_Risk` nas questões
+3, 4 e 5, executar o notebook por completo e versionar o resultado em uma
+branch."
 
 **Resposta:** edição das células, correção de um erro no vetor de cores da
 scatter matrix (o pandas descarta linhas com valores ausentes internamente),
@@ -100,8 +100,8 @@ execução.
 
 ### 6. Estrutura do artigo
 
-**Prompt:** "Faz o esqueleto do que o artigo precisa ter e do que eu posso falar
-em cada seção."
+**Prompt:** "Estruturar as seções exigidas pelo enunciado para o artigo,
+indicando o conteúdo e os resultados disponíveis para cada uma."
 
 **Resposta:** esqueleto por seção, com a distribuição de pontos do enunciado, os
 números disponíveis para cada bloco de resultados e alternativas de título.
@@ -111,8 +111,8 @@ das seções foi escrita pelos autores.
 
 ### 7. Referências bibliográficas
 
-**Prompt:** "Busca e confirma os dados corretos das referências da ADA e do IDF
-Atlas."
+**Prompt:** "Consultar as fontes e confirmar os dados bibliográficos das
+referências da ADA e do IDF Atlas."
 
 **Resposta:** busca nas fontes e devolução das referências conferidas, que estão
 em `paper/refs.bib`.

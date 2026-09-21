@@ -353,16 +353,17 @@ rather than at physiological ones: age from 18 to 90 years, heart rate
 from 50 to 120 bpm, triglycerides from 60 to 400~mg/dL and sleep from
 3 to 10 hours. The reading these figures impose is that the predictors
 do not reflect measurements taken from real patients, but were drawn
-from predefined uniform distributions.
+from predefined uniform distributions. This is the first of three
+analytical signals that will converge in Section~\ref{subsec:pca}.
 
 Body mass index escapes this otherwise general artificial pattern,
 showing a positive skewness and a kurtosis of $-0.45$ against the
 $-1.2$ of the remaining variables. The divergence arises because BMI
 was not drawn by the generator but computed algebraically as the
 quotient $\mathrm{weight}/\mathrm{height}^2$, and the ratio of two
-independent uniform variables is not itself uniform. This isolated
-behaviour is the first of three analytical signals that will converge
-in Section~\ref{subsec:pca}.
+independent uniform variables is not itself uniform. The exception
+therefore confirms that reading rather than weakening it: BMI is the
+one predictor the generator did not draw.
 
 \subsection{Class-conditional analysis and discriminative power}
 \label{subsec:cond}
@@ -480,7 +481,8 @@ coefficients, however, reflect nothing but the mathematical definition
 of the index itself, and are not an empirical or biological finding.
 Consistently with uniform and independent predictors, the point clouds
 of Fig.~\ref{fig:scatter} form rectangles devoid of latent structure,
-and no pair of variables separates the classes visually.
+and no pair of variables separates the classes visually. This absence
+of linear dependence is the second signal.
 
 % O achado mais interessante da secao.
 The least plausible finding of the correlation matrix is that the only
@@ -490,9 +492,8 @@ HbA1c and fasting blood sugar are strongly correlated, since the
 former integrates the average glycaemia of the preceding weeks. Here
 the disease label depends on both variables along mathematically
 independent paths, which is physiologically impossible and is
-explained only by the rules of the generating process. This is the
-second signal of the artificial nature of the relationships the
-dataset contains.
+explained only by the rules of the generating process, and it is the
+sharpest illustration of that second signal.
 
 \subsection{Principal component analysis}
 \label{subsec:pca}
@@ -604,6 +605,17 @@ very high apparent performance while relying on two predictors alone,
 and that behaviour would not transfer to real medical records.
 Recording and documenting this structural artificiality is, in itself,
 the most robust result this exploratory analysis delivers.
+
+% =====================================================================
+% Declaracao de uso de IA. O enunciado permite que os prompts e as
+% respostas fiquem num arquivo separado do repositorio, e e la que
+% estao, para nao ocupar as 6 paginas do artigo.
+\section*{Use of AI Tools}
+AI assistance (Anthropic Claude) was used in this work for code
+debugging, for verification queries over the dataset, for structuring
+the text and for checking the references. The prompts, the responses
+and the use made of each are recorded in \texttt{USO\_DE\_IA.md} in
+the project repository.
 
 % =====================================================================
 % REFERENCES -- minimo 5 ou 6.
