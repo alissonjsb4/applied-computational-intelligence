@@ -11,6 +11,8 @@ implementado sem bibliotecas prontas.
 
 ## Conteúdo do repositório
 
+O repositório principal do trabalho no github está hospedado no endereço https://github.com/alissonjsb4/applied-computational-intelligence
+
 | Caminho | Descrição |
 |---|---|
 | `homework1.ipynb` | Notebook com as cinco questões do enunciado, já executado |
