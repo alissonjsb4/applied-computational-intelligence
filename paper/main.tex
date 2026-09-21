@@ -31,18 +31,26 @@
 Risk Dataset: Strong Univariate Separability with Near-Absent
 Multivariate Structure}
 
-\author{
-\IEEEauthorblockN{Ícaro Adriano}
-\IEEEauthorblockA{609310\\Dep.\ de Eng.\ de Teleinformática\\Universidade Federal do Ceará}
-\and
-\IEEEauthorblockN{Matheus Reis}
-\IEEEauthorblockA{571954\\Dep.\ de Eng.\ de Teleinformática\\Universidade Federal do Ceará}
-\and
-\IEEEauthorblockN{Alisson Jaime}
-\IEEEauthorblockA{555083\\Dep.\ de Eng.\ de Teleinformática\\Universidade Federal do Ceará}
-\and
-\IEEEauthorblockN{Vinícius A. G. do Nascimento}
-\IEEEauthorblockA{568594\\Dep.\ de Eng.\ de Teleinformática\\Universidade Federal do Ceará}
+% Com 4 autores o \and do IEEEtran joga todos numa linha so e as colunas
+% ficam com larguras diferentes, porque os nomes tem tamanhos diferentes.
+% Duas linhas de dois, em minipages de largura fixa, ficam simetricas.
+% Os macros \IEEEauthorblockN/A so funcionam na estrutura propria do \author
+% do IEEEtran, entao dentro da minipage usamos formatacao direta, com os
+% mesmos corpos de letra que eles aplicam.
+\newcommand{\autorbloco}[2]{%
+  \begin{minipage}[t]{0.46\textwidth}\centering
+  {\normalsize #1}\\[0.35em]
+  {\small #2\\
+  \textit{Dep.\ de Eng.\ de Teleinformática}\\
+  \textit{Universidade Federal do Ceará}}
+  \end{minipage}}
+
+% O \author do IEEEtran ja e um ambiente tabular, entao um \\ solto abriria
+% linha nova nesse tabular e quebraria a compilacao. O \parbox isola.
+\author{%
+\parbox{\textwidth}{\centering
+\autorbloco{Ícaro Adriano}{609310}\hfill\autorbloco{Matheus Reis}{571954}\\[1.4em]
+\autorbloco{Alisson Jaime}{555083}\hfill\autorbloco{Vinícius A. G. do Nascimento}{568594}}
 }
 
 \maketitle
