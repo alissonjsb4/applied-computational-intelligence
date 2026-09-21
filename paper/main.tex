@@ -340,22 +340,29 @@ All but the body mass index are visibly flat-topped.}
 \end{figure}
 
 % O achado: quase tudo e uniforme, nao gaussiano.
-TODO: comentar que todas as assimetrias sao praticamente nulas, entre
-$-0.015$ e $+0.008$, com a unica excecao do IMC ($\gamma = 0.432$).
-Simetria, porem, nao implica normalidade, e e a curtose que resolve a
-questao: 19 dos 20 preditores tem curtose excedente entre $-1.21$ e
-$-1.19$, indistinguivel do valor $-6/5$ de uma distribuicao uniforme,
-e os histogramas da Fig.~\ref{fig:hist} sao visivelmente achatados e
-truncados. Os limites reforcam a leitura, pois sao numeros redondos
-escolhidos por conveniencia e nao valores fisiologicos: idade de 18 a
-90 anos, frequencia cardiaca de 50 a 120 bpm, triglicerideos de 60 a
-400 mg/dL, sono de 3 a 10 horas.
+Nearly every predictor shows a practically null skewness, ranging from
+$-0.015$ to $+0.008$, with the notable exception of BMI
+($\gamma = 0.432$). Such symmetry, however, does not imply normality,
+since a uniform density is strictly symmetric as well; the decisive
+quantity is the kurtosis. Nineteen of the twenty predictors have an
+excess kurtosis between $-1.21$ and $-1.19$, matching the theoretical
+value of $-6/5$ expected for a uniform distribution. This is
+corroborated by the histograms of Fig.~\ref{fig:hist}, which are
+visibly flat and truncated at round limits chosen for convenience
+rather than at physiological ones: age from 18 to 90 years, heart rate
+from 50 to 120 bpm, triglycerides from 60 to 400~mg/dL and sleep from
+3 to 10 hours. The reading these figures impose is that the predictors
+do not reflect measurements taken from real patients, but were drawn
+from predefined uniform distributions.
 
-TODO: a unica excecao e o IMC, com curtose $-0.45$ e assimetria
-positiva, e a excecao tem explicacao mecanica: sendo o quociente
-$\mathrm{peso}/\mathrm{altura}^2$ de duas uniformes independentes, ele
-nao e uniforme. O IMC nao foi sorteado, foi \emph{calculado}. Este e o
-primeiro dos tres sinais que convergem na Secao~\ref{subsec:pca}.
+Body mass index escapes this otherwise general artificial pattern,
+showing a positive skewness and a kurtosis of $-0.45$ against the
+$-1.2$ of the remaining variables. The divergence arises because BMI
+was not drawn by the generator but computed algebraically as the
+quotient $\mathrm{weight}/\mathrm{height}^2$, and the ratio of two
+independent uniform variables is not itself uniform. This isolated
+behaviour is the first of three analytical signals that will converge
+in Section~\ref{subsec:pca}.
 
 \subsection{Class-conditional analysis and discriminative power}
 \label{subsec:cond}
@@ -398,34 +405,48 @@ predictors.}
 \end{figure}
 
 % A resposta direta a pergunta do enunciado.
-TODO: responder diretamente a pergunta do enunciado. Sim, ha
-preditores com poder discriminativo isolado, e sao dois: glicose em
-jejum ($\delta = 1.44$) e HbA1c ($\delta = 1.38$), seguidos a
-distancia por idade ($0.84$), IMC ($0.61$) e peso ($0.57$). Abaixo de
-$\delta \approx 0.1$ os onze preditores restantes nao separam nada.
+The answer to whether any predictor separates the classes on its own
+is affirmative, and two markers stand out: fasting blood sugar
+($\delta = 1.44$) and HbA1c ($\delta = 1.38$). The discriminative
+capacity then falls substantially, to age ($\delta = 0.84$), BMI
+($\delta = 0.61$) and weight ($\delta = 0.57$). The remaining fifteen
+predictors all stay below $\delta = 0.5$, and ten of them below
+$\delta = 0.1$, a range in which the separation between groups is
+indistinguishable from noise.
 
 % Os numeros clinicos que valem citar.
-TODO: HbA1c varia de $5.67$ (Low) a $8.86$ (High), exatamente a
-travessia da faixa clinica de normal para diabetico \cite{ada2024};
-glicose em jejum vai de $88.4$ a $152.8$~mg/dL, atravessando o limiar
-diagnostico de 126; idade de $38.8$ a $56.5$ anos; IMC de $25.6$ a
-$31.9$, isto e, de sobrepeso para obesidade. Nesse sentido, os
-preditores que separam as classes sao clinicamente os corretos.
+From a clinical standpoint, the predictors with the greatest
+separating power display values and progressions that make full
+physiological sense \cite{ada2024}. HbA1c rises from $5.67\%$ in the
+low-risk class to $8.86\%$ in the high-risk one, which is exactly the
+transition from the normal to the diabetic range, while fasting blood
+sugar goes from $88.4$ to $152.8$~mg/dL, comfortably crossing the
+diagnostic threshold of 126~mg/dL. Age advances from $38.8$ to $56.5$
+years and BMI evolves from $25.6$ to $31.9$, a clear progression from
+overweight to obesity. Under this strict reading of isolated means,
+the dominant predictors are the clinically correct ones.
 
 % As tres criticas. Isto e leitura critica, nao descricao: vale ponto.
 Three observations qualify this apparent clinical fidelity.
-TODO (i): a glicose casual tem $\delta = 0.020$, praticamente ruido,
-enquanto a glicose em jejum tem $\delta = 1.44$. Clinicamente as duas
-medem o mesmo substrato e caminham juntas, de modo que o gerador usou
-uma e ignorou a outra.
-TODO (ii): a circunferencia abdominal, marcador consagrado de risco
-metabolico, tem $\delta = 0.041$ e ainda por cima \emph{decresce} com
-o risco, de $100.85$ para $99.91$~cm.
-TODO (iii): a altura decresce de $173.7$ para $169.4$~cm com
-$\delta = 0.30$, o que nao e fisiologia mas consequencia algebrica de
-o IMC dirigir o rotulo: a peso igual, quem e mais baixo tem IMC maior,
-e portanto a altura herda um sinal invertido que ela nao possui na
-populacao real.
+First, casual blood glucose has a practically null discriminative
+power ($\delta = 0.020$) and behaves as mere noise, whereas fasting
+blood sugar dominates the separation ($\delta = 1.44$). Since both
+measure the same physiological substrate and move together in a real
+patient, the generator evidently derived the labels from one and
+ignored the other.
+
+Second, waist circumference, although an established marker of
+metabolic and cardiovascular risk, does not separate the classes in
+this synthetic set ($\delta = 0.041$). In further contradiction with
+physiology, its mean value decreases slightly as the diabetic risk
+increases, from $100.85$ to $99.91$~cm.
+
+Third, mean height decreases from $173.7$ to $169.4$~cm as risk rises,
+with $\delta = 0.30$, which has no medical basis whatsoever. This
+distortion is a strictly algebraic consequence of BMI driving the
+assignment of the labels: at equal weight, shorter individuals have a
+mathematically larger BMI, so height inherits an inverted correlation
+with the disease that it would never hold in a real population.
 
 \subsection{Bivariate analysis}
 \label{subsec:bivar}
@@ -451,22 +472,27 @@ random subsample of 3{,}000 observations, coloured by risk class.}
 \end{figure}
 
 % O segundo sinal: correlacoes nulas em quase todos os pares.
-TODO: a matriz e essencialmente uma identidade. A mediana do modulo
-das correlacoes fora da diagonal e $0.003$, e apenas dois pares fogem
-disso: IMC com peso ($\rho = +0.843$) e IMC com altura
-($\rho = -0.516$), que sao a propria definicao do indice e nao um
-achado empirico. As nuvens da Fig.~\ref{fig:scatter} sao retangulos
-sem estrutura, coerentes com preditores uniformes e independentes, e
-nenhum par separa visualmente as classes.
+The correlation matrix approaches an identity matrix closely, with a
+median absolute off-diagonal correlation of $0.003$. Only two pairs
+depart from this pattern of total independence: BMI with weight
+($\rho = +0.843$) and BMI with height ($\rho = -0.516$). These two
+coefficients, however, reflect nothing but the mathematical definition
+of the index itself, and are not an empirical or biological finding.
+Consistently with uniform and independent predictors, the point clouds
+of Fig.~\ref{fig:scatter} form rectangles devoid of latent structure,
+and no pair of variables separates the classes visually.
 
 % O achado mais interessante da secao.
-TODO: o achado central e que HbA1c e glicose em jejum, os dois unicos
-preditores com poder discriminativo relevante, tem $\rho = -0.005$
-entre si. Num paciente real esses dois exames sao fortemente
-correlacionados, pois a HbA1c integra a glicemia das semanas
-anteriores. Aqui o rotulo depende dos dois por caminhos independentes,
-o que e fisiologicamente impossivel e so se explica pelo processo
-gerador. Este e o segundo sinal.
+The least plausible finding of the correlation matrix is that the only
+two predictors with relevant discriminative power are statistically
+uncorrelated with each other ($\rho = -0.005$). In a real patient
+HbA1c and fasting blood sugar are strongly correlated, since the
+former integrates the average glycaemia of the preceding weeks. Here
+the disease label depends on both variables along mathematically
+independent paths, which is physiologically impossible and is
+explained only by the rules of the generating process. This is the
+second signal of the artificial nature of the relationships the
+dataset contains.
 
 \subsection{Principal component analysis}
 \label{subsec:pca}
@@ -499,49 +525,56 @@ components, coloured by risk class.}
 
 % A assinatura dos autovalores: terceiro sinal, vindo de um terceiro
 % metodo.
-TODO: apos a padronizacao a soma dos autovalores e 20, de modo que um
-conjunto de preditores mutuamente nao correlacionados produz vinte
-autovalores iguais a $1$. E quase exatamente o que se observa: as
-componentes PC2 a PC19 ficam entre $0.956$ e $1.037$, uma faixa de
-menos de $\pm 4\%$ em torno da unidade. Um espectro plano e a
-assinatura da ausencia de estrutura linear, e constitui o terceiro
-sinal independente, vindo de um terceiro metodo, do que a curtose e a
-matriz de correlacao ja indicavam.
+After standardisation the eigenvalues sum to 20, so a set of mutually
+uncorrelated predictors would yield twenty eigenvalues equal to $1$.
+That is very nearly what is observed: components PC2 to PC19 lie
+between $0.956$ and $1.037$, confined to a band of less than $5\%$
+around unity. Such a flat spectrum is the classical signature of an
+absence of linear structure. It constitutes the third independent
+signal, produced by a third statistical method, pointing at the same
+fact that the kurtosis analysis and the correlation matrix had already
+indicated.
 
 % As duas excecoes sao a mesma coisa: a identidade do IMC.
-TODO: as duas excecoes sao a mesma coisa vista por dois lados. Os
-\emph{loadings} da primeira componente ($\lambda = 1.994$) sao IMC
-$-0.706$, peso $-0.602$ e altura $+0.372$, com todos os demais abaixo
-de $0.02$ em modulo; os da ultima ($\lambda = 0.0123$) sao IMC
-$+0.708$, peso $-0.603$ e altura $+0.368$. O PCA isolou sozinho a
-identidade $\mathrm{IMC} = \mathrm{peso}/\mathrm{altura}^2$: a maior
-variancia esta no plano gerado por essas tres variaveis, e o autovalor
-quase nulo mede a dependencia quase deterministica entre elas, quase e
-nao exatamente porque a relacao e nao linear e o PCA so captura sua
-melhor aproximacao linear. Esta e a unica relacao estrutural presente
-no conjunto, e o metodo a encontrou sem ser instruido.
+The only departures from the flatness of the spectrum are the first
+component ($\lambda = 1.994$) and the last one ($\lambda = 0.0123$).
+The first concentrates its loadings almost exclusively on BMI
+($-0.706$), weight ($-0.602$) and height ($+0.372$), everything else
+staying below $0.02$ in absolute value, while the last mirrors exactly
+the same triple with BMI $+0.708$, weight $-0.603$ and height
+$+0.368$. The reading is that the analysis isolated, unprompted, the
+algebraic identity by which BMI is strictly derived from weight and
+height. The largest variance of the set therefore lies in the plane
+spanned by these three variables, and the near-null eigenvalue
+measures the almost deterministic dependence among them, almost and
+not exactly because the relation is non-linear and the method captures
+only its best linear approximation. It is the single structural
+relation present in the data.
 
 % Responder LITERALMENTE as tres perguntas do enunciado.
-TODO: responder as tres perguntas do item 5. (i) As classes nao ficam
-bem separadas na projecao, e ficam \emph{pior} separadas do que na
-analise monovariada de HbA1c ou glicose em jejum. (ii) Nao ha
-fronteira linear visivel. (iii) \emph{Moderate} se sobrepoe
-fortemente a \emph{High}, e \emph{Low} e praticamente invisivel, tanto
-por conter apenas 470 pontos quanto por ocupar a mesma regiao que as
-outras duas.
+Answering the three questions directly, the classes are not well
+separated in the projection, and are in fact separated \emph{worse}
+than in the univariate analysis of HbA1c or fasting blood sugar.
+Second, no linear decision boundary is visible that would distinguish
+the risk groups in the projected space. Finally, \emph{Moderate}
+overlaps \emph{High} heavily, while \emph{Low} becomes practically
+invisible, both because of its small sample size, only 470 points, and
+because it occupies the very same region as the other two.
 
 % Paragrafo de fechamento: a tensao entre os dois achados.
-TODO: fechar com a tensao aparente. As duas primeiras componentes
-explicam apenas $15.2\%$ da variancia e a projecao nao separa nada,
-enquanto a analise monovariada encontrou sinal forte e clinicamente
-coerente. As duas coisas sao verdadeiras ao mesmo tempo porque medem
-objetos diferentes: o PCA maximiza variancia, nao separabilidade, e
-quando os preditores sao quase todos independentes nao existe direcao
-de alta variancia onde a informacao de classe se concentre. Alem
-disso, a unica direcao de variancia elevada que o conjunto possui, a
-do IMC, e justamente uma relacao algebrica sem conteudo discriminativo
-proprio. O PCA nao falhou; ele reportou corretamente que nao ha
-estrutura multivariada a reportar.
+The apparent contradiction between the strong signal found in the
+univariate analysis and the absence of separation under PCA dissolves
+once it is understood that the two measure distinct properties. The
+first two components explain only $15.2\%$ of the variance because the
+spectrum is flat and no dominant direction exists to concentrate it.
+The projection fails to separate the classes for a different reason:
+the method maximises variance, not separability, and when the
+predictors are almost all independent there is no high-variance
+direction in which the class information happens to lie. Moreover, the
+single high-variance direction the set does possess, that of BMI, is
+merely an algebraic relation with no discriminative content of its
+own. PCA did not fail; it correctly reported that there is no
+multivariate structure to report.
 
 % =====================================================================
 % IV. CONCLUSION
@@ -549,23 +582,28 @@ estrutura multivariada a reportar.
 \section{Conclusion}
 \label{sec:conclusion}
 
-TODO: os tres achados convergem para uma leitura unica. A curtose
-uniforme em 19 de 20 preditores, a mediana de $0.003$ nas correlacoes
-e o espectro de autovalores plano sao tres medidas independentes do
-mesmo fato: os preditores foram amostrados de distribuicoes uniformes
-independentes em intervalos redondos, e o rotulo foi atribuido a
-posteriori em funcao de poucas variaveis, principalmente glicose em
-jejum, HbA1c, idade e IMC. A unica dependencia presente e algebrica,
-nao fisiologica.
+The exploratory analysis produced three independent pieces of evidence
+that converge on the same fact: the uniform kurtosis of nineteen of
+the twenty predictors, the median of $0.003$ among the off-diagonal
+correlations, and the flat eigenvalue spectrum. Together they indicate
+that the predictors were sampled from independent uniform
+distributions over round numerical intervals, and that the diagnostic
+label was assigned afterwards as a function of a restricted group of
+variables, chiefly fasting blood sugar, HbA1c, age and BMI.
+Consequently the only structural interdependence present in this
+dataset is strictly algebraic, with no grounding in real physiology.
 
-TODO: a implicacao pratica. Um dataset assim serve para exercitar o
-fluxo de analise, que e o objetivo deste trabalho, mas nao suporta
-conclusoes clinicas nem permite avaliar de forma realista metodos
-multivariados, justamente porque a estrutura multivariada que esses
-metodos existem para explorar foi eliminada na geracao. Um
-classificador treinado aqui alcancaria bom desempenho aparente usando
-dois preditores, e esse resultado nao transferiria para dados reais.
-Registrar isso e, em si, um resultado da analise exploratoria.
+In practical terms, a synthetic dataset with these characteristics
+serves perfectly well to exercise the methodological flow of data
+analysis, which is the scope and the objective of this work. It is,
+on the other hand, strictly inadequate as a basis for clinical
+conclusions or for realistically testing multivariate methods,
+precisely because the covariance those algorithms exist to exploit was
+suppressed at generation time. A classifier trained here would reach a
+very high apparent performance while relying on two predictors alone,
+and that behaviour would not transfer to real medical records.
+Recording and documenting this structural artificiality is, in itself,
+the most robust result this exploratory analysis delivers.
 
 % =====================================================================
 % REFERENCES -- minimo 5 ou 6.
