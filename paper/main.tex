@@ -172,10 +172,13 @@ values.
 
 % Distribuicao de classes: comentar o desbalanceamento (Low < 1%).
 Table~\ref{tab:classdist} reports the class distribution.
-TODO: comentar que a classe \emph{Low}, com 470 observacoes contra
-36{,}593 da classe \emph{High}, uma razao de 78 para 1, torna
-instaveis as estatisticas condicionais dessa classe e seria um
-problema serio para qualquer classificacao futura.
+The disparity between the 36{,}593 observations of class \emph{High}
+and the 470 of class \emph{Low}, a ratio of 78 to 1 and a mere
+$0.94\%$ of the sample, imposes structural limits on the analysis. It
+renders the class-conditional estimates of the minority class
+unstable, and it would compromise the evaluation of any future
+classifier, since a naive model that constantly predicts \emph{High}
+would already reach $73\%$ accuracy.
 
 \begin{table}[htbp]
 \caption{Class distribution of \texttt{Diabetes\_Risk}}
@@ -196,12 +199,19 @@ Total & 50{,}000 & 100.00\% \\
 % e observacao propria e vale ponto.
 Table~\ref{tab:missing} summarises the missing values, which affect 12
 of the 20 quantitative predictors.
-TODO: destacar que quatro deles apresentam \emph{exatamente} mil
-ausencias cada, e que os quatro sao precisamente o painel lipidico
-completo (colesterol total, HDL, LDL e triglicerideos). Perda natural
-de registro nao produz um numero redondo identico em quatro variaveis
-correlacionadas por exame; o padrao indica injecao deliberada de
-ausencias em bloco pelo gerador.
+Four of them are missing \emph{exactly} one thousand values each, and
+those four are precisely the complete lipid panel: total cholesterol,
+HDL, LDL and triglycerides. A fifth column outside the quantitative
+set, medication adherence, shows the same round count. Natural record
+loss does not produce an identical round figure across five variables,
+so the absences were evidently injected by the generator. They were
+not injected by examination, however: no observation lacks all four
+lipid measurements at once, and the pairwise overlap between them
+ranges from 12 to 21 rows, which is what independent sampling of $2\%$
+of the records would yield. In clinical practice a lipid panel is a
+single blood draw and its four results go missing together; here a
+fixed quota of one thousand absences was drawn column by column,
+ignoring that dependency.
 
 \begin{table}[htbp]
 \caption{Missing values (only affected predictors shown)}
@@ -220,16 +230,19 @@ Predictor & Missing \\
 \label{subsec:preproc}
 
 % Padronizacao e dropna, com a limitacao dos 33%.
-TODO: (i) padronizacao para media zero e variancia unitaria antes do
-PCA, justificada pelas escalas heterogeneas (mg/dL, kg, cm, anos), sem
-a qual os preditores de maior escala dominariam a matriz de
-covariancia; (ii) remocao das linhas com valor ausente antes do PCA,
-exigida pela estimativa da matriz de covariancia, que reduz a amostra
-de $50{,}000$ para $33{,}689$ observacoes, isto e, $32.6\%$ dos dados
-descartados. Declarar isso como limitacao: a analise multivariada
-descreve um subconjunto completo, nao a coorte inteira. As estatisticas
-univariadas e bivariadas usam todas as observacoes disponiveis por
-preditor.
+Standardising the variables to zero mean and unit variance before the
+principal component analysis is mandatory, since the raw predictors
+operate on widely disparate scales (mg/dL, kg, cm, years); without
+that correction the variables of larger magnitude would dominate the
+covariance matrix and the analysis would describe the units of
+measurement rather than the intrinsic structure of the data.
+Furthermore, because the covariance matrix requires complete records,
+the rows holding missing values were removed. This exclusion reduced
+the set from $50{,}000$ to $33{,}689$ observations, that is, $32.6\%$
+of the data discarded, and it establishes a methodological limitation:
+the multivariate analysis describes a complete subset and not the
+entire cohort. The univariate and bivariate statistics, in contrast,
+use every observation available for each predictor.
 
 \subsection{Analytical methods}
 \label{subsec:methods}
@@ -243,7 +256,8 @@ deviation $\sigma_d$ and the skewness $\gamma_d$,
 \left(\frac{x_{n,d}-\mu_d}{\sigma_d}\right)^{3},
 \label{eq:skew}
 \end{equation}
-% TODO: dizer o que a assimetria informa (cauda, desvio da gaussiana).
+which quantifies the imbalance between the tails of a distribution and
+vanishes for any density symmetric about its mean,
 together with the excess kurtosis, the analogous fourth-order moment
 minus three, and their class-conditional counterparts $\mu_{d|l}$,
 $\sigma_{d|l}$ and $\gamma_{d|l}$ over the $N_l$ observations of each
