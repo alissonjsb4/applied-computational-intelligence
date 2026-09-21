@@ -100,25 +100,48 @@ data, diabetes risk, class separability
 % --- P1: diabetes como problema de saude publica + deteccao precoce.
 % Referencias externas entram aqui (IDF/ADA).
 Diabetes mellitus is one of the largest public health burdens
-worldwide \cite{idf2021}. TODO: magnitude, custo, e por que a
-deteccao precoce muda o desfecho clinico.
+worldwide \cite{idf2021}. In 2024, 589 million adults aged 20 to 79
+years, one in every nine, were living with the condition, and this
+figure is projected to reach 853 million by 2050, a 45\% rise against
+a projected population growth of 25\%. A further 252 million adults
+are estimated to be unaware that they have it. The disease accounted
+for 3.4 million deaths and for at least USD 1 trillion in health
+expenditure in that single year, which is what makes early detection
+consequential: it opens a window for treatment and lifestyle
+intervention before microvascular and cardiovascular complications
+become established.
 
 % --- P2: por que analise exploratoria antes de modelagem.
 % Este paragrafo justifica a existencia do trabalho.
-TODO: antes de ajustar qualquer classificador, a estrutura dos dados
-precisa ser compreendida; estatistica descritiva e projecao linear
-revelam redundancia, escala, outliers e separabilidade.
+Fitting a classifier without a prior exploratory analysis makes it
+impossible to tell whether the performance obtained reflects genuine
+clinical patterns or artefacts of the data. Descriptive statistics and
+linear projections expose, beforehand, redundancy among predictors,
+disparities of scale, outliers and the degree of overlap between the
+classes. Without that map of the underlying structure, neither the
+success nor the failure of a model can be diagnosed.
 
 % --- P3: datasets sinteticos em saude. ESTE e o paragrafo que
 % diferencia o trabalho: privacidade, volume, ensino, e as limitacoes.
 % Prepara a discussao dos resultados e a conclusao.
-TODO: dados sinteticos sao usados por privacidade, volume e ensino
-\cite{synthetic2021}; a limitacao e que o processo gerador pode nao
-preservar as dependencias do fenomeno real. Declarar explicitamente
-aqui que o dataset analisado e sintetico \cite{kaggle2024}.
+The use of synthetic datasets in health care has grown as a way of
+circumventing strict patient privacy constraints, of compensating for
+the scarcity of records and of enabling educational applications
+\cite{synthetic2021}. That convenience, however, carries the risk that
+the generating process fails to reproduce the complex physiological
+interdependencies present in real clinical populations. When
+multivariate relationships are not preserved, algorithms trained on
+such data tend to learn mathematical artefacts rather than legitimate
+biological mechanisms. It is in this context that the dataset analysed
+here belongs, its origin being explicitly synthetic \cite{kaggle2024}.
 
 % --- P4: objetivo e organizacao do artigo.
-TODO: objetivo do trabalho e mapa das secoes.
+This work presents an exploratory and multivariate characterisation of
+a synthetic dataset of diabetes risk, assessing its statistical
+consistency and its clinical fidelity before any modelling step. We
+investigate the dependencies among predictors and determine to what
+extent the risk classes are structurally separable, both in the
+original predictor space and under projections of maximum variance.
 The remainder of this paper is organised as follows.
 Section~\ref{sec:methods} describes the dataset and the analytical
 methods. Section~\ref{sec:results} reports and discusses the results.
