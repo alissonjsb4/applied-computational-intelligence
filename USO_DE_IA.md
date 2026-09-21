@@ -121,10 +121,7 @@ em `paper/refs.bib`.
 
 ## Ícaro Adriano
 
-> **A PREENCHER PELO ÍCARO:** registrar aqui o uso de IA, se houve, na redação
-> do esqueleto do artigo e do abstract inicial. Se não houve, declarar
-> explicitamente que a seção foi escrita sem auxílio de ferramentas de IA.
-
+Foi realizado uso de IA no que tange a pesquisa de funções e métodos da linguagem de programação utilizada, identificação de erros e levantamento de soluções e avaliação de estrutura e argumentos do corpo textual do trabalho escrito bem como correções ortograficas.
 ---
 
 ## Vinícius Alexandre Gomes do Nascimento
