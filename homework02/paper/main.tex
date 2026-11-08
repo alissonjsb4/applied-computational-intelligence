@@ -1,0 +1,626 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{../figuras/}}
+
+% As tabelas sao geradas por paper/gerar_tabelas.py a partir do dataset.
+% Nunca editar tabelas/*.tex na mao: rode o script de novo.
+
+\begin{document}
+
+% =====================================================================
+% TITLE (5 pts)
+% Alternativas consideradas (o enunciado pede que se tente mais de uma):
+%   A) Exploratory Analysis of a 50,000-Patient Synthetic Diabetes Risk
+%      Dataset: Strong Univariate Separability with Near-Absent
+%      Multivariate Structure                                  <- segura
+%   B) What Principal Component Analysis Reveals About a Synthetic
+%      Dataset: Glycemic Markers Separate Diabetes Risk Classes
+%      That PCA Cannot                                    <- mais forte
+%   C) Fasting Glucose and HbA1c Alone Separate Diabetes Risk Classes
+%      in a Synthetic 50,000-Patient Cohort
+% =====================================================================
+\title{Exploratory Analysis of a 50{,}000-Patient Synthetic Diabetes
+Risk Dataset: Strong Univariate Separability with Near-Absent
+Multivariate Structure}
+
+% Com 4 autores o \and do IEEEtran joga todos numa linha so e as colunas
+% ficam com larguras diferentes, porque os nomes tem tamanhos diferentes.
+% Duas linhas de dois, em minipages de largura fixa, ficam simetricas.
+% Os macros \IEEEauthorblockN/A so funcionam na estrutura propria do \author
+% do IEEEtran, entao dentro da minipage usamos formatacao direta, com os
+% mesmos corpos de letra que eles aplicam.
+\newcommand{\autorbloco}[2]{%
+  \begin{minipage}[t]{0.46\textwidth}\centering
+  {\normalsize #1}\\[0.35em]
+  {\small #2\\
+  \textit{Dep.\ de Eng.\ de Teleinformática}\\
+  \textit{Universidade Federal do Ceará}}
+  \end{minipage}}
+
+% O \author do IEEEtran ja e um ambiente tabular, entao um \\ solto abriria
+% linha nova nesse tabular e quebraria a compilacao. O \parbox isola.
+\author{%
+\parbox{\textwidth}{\centering
+\autorbloco{Ícaro Adriano}{609310}\hfill\autorbloco{Matheus Reis}{571954}\\[1.4em]
+\autorbloco{Alisson Jaime}{555083}\hfill\autorbloco{Vinícius A. G. do Nascimento}{568594}}
+}
+
+\maketitle
+
+% =====================================================================
+% ABSTRACT (10 pts) -- 4 frases: objetivo, dados, metodos, resultado.
+% ATENCAO: nao prometer machine learning. O trabalho e exploratorio.
+% =====================================================================
+\begin{abstract}
+% [1] Objetivo
+This work presents an exploratory analysis of a publicly available
+synthetic dataset of diabetes risk, with the goal of characterising
+which of its predictors carry discriminative information before any
+predictive model is considered.
+% [2] Dados
+The dataset comprises $N = 50{,}000$ records, $D = 22$ predictors and
+$L = 3$ risk classes, with a strongly imbalanced class distribution in
+which the \emph{Low} class holds only $0.94\%$ of the observations.
+% [3] Metodos
+We combine unconditional and class-conditional univariate statistics,
+pairwise Pearson correlation and a principal component analysis (PCA)
+implemented from first principles, without recourse to pre-made PCA
+routines.
+% [4] Resultado principal
+Two glycemic markers, fasting blood sugar and HbA1c, separate the risk
+classes almost by themselves, yet the first two principal components
+account for only $15.2\%$ of the total variance. Three independent
+lines of evidence, an excess kurtosis of $-1.2$ in 19 of the 20
+quantitative predictors, a median absolute pairwise correlation of
+$0.003$, and an eigenvalue spectrum flat at unity, converge on the same
+conclusion: the predictors were drawn independently from bounded
+uniform distributions, and the only structural relationship the data
+contain is the algebraic identity that defines the body mass index.
+\end{abstract}
+
+\begin{IEEEkeywords}
+exploratory data analysis, principal component analysis, synthetic
+data, diabetes risk, class separability
+\end{IEEEkeywords}
+
+% =====================================================================
+% I. INTRODUCTION (20 pts) -- alvo: 1 pagina, 4 paragrafos.
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+% --- P1: diabetes como problema de saude publica + deteccao precoce.
+% Referencias externas entram aqui (IDF/ADA).
+Diabetes mellitus is one of the largest public health burdens
+worldwide \cite{idf2021}. In 2024, 589 million adults aged 20 to 79
+years, one in every nine, were living with the condition, and this
+figure is projected to reach 853 million by 2050, a 45\% rise against
+a projected population growth of 25\%. A further 252 million adults
+are estimated to be unaware that they have it. The disease accounted
+for 3.4 million deaths and for at least USD 1 trillion in health
+expenditure in that single year, which is what makes early detection
+consequential: it opens a window for treatment and lifestyle
+intervention before microvascular and cardiovascular complications
+become established.
+
+% --- P2: por que analise exploratoria antes de modelagem.
+% Este paragrafo justifica a existencia do trabalho.
+Fitting a classifier without a prior exploratory analysis makes it
+impossible to tell whether the performance obtained reflects genuine
+clinical patterns or artefacts of the data. Descriptive statistics and
+linear projections expose, beforehand, redundancy among predictors,
+disparities of scale, outliers and the degree of overlap between the
+classes. Without that map of the underlying structure, neither the
+success nor the failure of a model can be diagnosed.
+
+% --- P3: datasets sinteticos em saude. ESTE e o paragrafo que
+% diferencia o trabalho: privacidade, volume, ensino, e as limitacoes.
+% Prepara a discussao dos resultados e a conclusao.
+The use of synthetic datasets in health care has grown as a way of
+circumventing strict patient privacy constraints, of compensating for
+the scarcity of records and of enabling educational applications
+\cite{synthetic2021}. That convenience, however, carries the risk that
+the generating process fails to reproduce the complex physiological
+interdependencies present in real clinical populations. When
+multivariate relationships are not preserved, algorithms trained on
+such data tend to learn mathematical artefacts rather than legitimate
+biological mechanisms. It is in this context that the dataset analysed
+here belongs, its origin being explicitly synthetic \cite{kaggle2024}.
+
+% --- P4: objetivo e organizacao do artigo.
+This work presents an exploratory and multivariate characterisation of
+a synthetic dataset of diabetes risk, assessing its statistical
+consistency and its clinical fidelity before any modelling step. We
+investigate the dependencies among predictors and determine to what
+extent the risk classes are structurally separable, both in the
+original predictor space and under projections of maximum variance.
+The remainder of this paper is organised as follows.
+Section~\ref{sec:methods} describes the dataset and the analytical
+methods. Section~\ref{sec:results} reports and discusses the results.
+Section~\ref{sec:conclusion} concludes.
+
+% =====================================================================
+% II. METHODS (30 pts) -- alvo: 1,5 pagina.
+% Regra do enunciado: TODA figura e TODA tabela citada e comentada
+% no texto corrido. Nenhuma float orfa.
+% =====================================================================
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Dataset}
+\label{subsec:dataset}
+
+% Fonte, natureza sintetica, N, D, L.
+The dataset was obtained from Kaggle \cite{kaggle2024} and is
+explicitly described by its authors as a large-scale \emph{synthetic}
+healthcare dataset. The raw file holds 41 columns, from which we
+discard \texttt{Patient\_ID}, a row identifier carrying no
+physiological information, and \texttt{Diabetes\_Risk\_Score}, the
+continuous score from which the categorical label is derived. This
+leaves $N = 50{,}000$ observations and $D = 22$ predictors, of which 20
+are quantitative and two (\texttt{Country} and \texttt{Gender}) are
+categorical. The class label \texttt{Diabetes\_Risk} takes $L = 3$
+values.
+
+% Distribuicao de classes: comentar o desbalanceamento (Low < 1%).
+Table~\ref{tab:classdist} reports the class distribution.
+The disparity between the 36{,}593 observations of class \emph{High}
+and the 470 of class \emph{Low}, a ratio of 78 to 1 and a mere
+$0.94\%$ of the sample, imposes structural limits on the analysis. It
+renders the class-conditional estimates of the minority class
+unstable, and it would compromise the evaluation of any future
+classifier, since a naive model that constantly predicts \emph{High}
+would already reach $73\%$ accuracy.
+
+\begin{table}[htbp]
+\caption{Class distribution of \texttt{Diabetes\_Risk}}
+\label{tab:classdist}
+\centering
+\begin{tabular}{lrr}
+\toprule
+Class & $N_l$ & Share \\
+\midrule
+\input{tabelas/classdist}\\
+\midrule
+Total & 50{,}000 & 100.00\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Valores faltantes: o padrao de exatos 1000 no painel lipidico
+% e observacao propria e vale ponto.
+Table~\ref{tab:missing} summarises the missing values, which affect 12
+of the 20 quantitative predictors.
+Four of them are missing \emph{exactly} one thousand values each, and
+those four are precisely the complete lipid panel: total cholesterol,
+HDL, LDL and triglycerides. A fifth column outside the quantitative
+set, medication adherence, shows the same round count. Natural record
+loss does not produce an identical round figure across five variables,
+so the absences were evidently injected by the generator. They were
+not injected by examination, however: no observation lacks all four
+lipid measurements at once, and the pairwise overlap between them
+ranges from 12 to 21 rows, which is what independent sampling of $2\%$
+of the records would yield. In clinical practice a lipid panel is a
+single blood draw and its four results go missing together; here a
+fixed quota of one thousand absences was drawn column by column,
+ignoring that dependency.
+
+\begin{table}[htbp]
+\caption{Missing values (only affected predictors shown)}
+\label{tab:missing}
+\centering
+\begin{tabular}{lr}
+\toprule
+Predictor & Missing \\
+\midrule
+\input{tabelas/missing}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pre-processing}
+\label{subsec:preproc}
+
+% Padronizacao e dropna, com a limitacao dos 33%.
+Standardising the variables to zero mean and unit variance before the
+principal component analysis is mandatory, since the raw predictors
+operate on widely disparate scales (mg/dL, kg, cm, years); without
+that correction the variables of larger magnitude would dominate the
+covariance matrix and the analysis would describe the units of
+measurement rather than the intrinsic structure of the data.
+Furthermore, because the covariance matrix requires complete records,
+the rows holding missing values were removed. This exclusion reduced
+the set from $50{,}000$ to $33{,}689$ observations, that is, $32.6\%$
+of the data discarded, and it establishes a methodological limitation:
+the multivariate analysis describes a complete subset and not the
+entire cohort. The univariate and bivariate statistics, in contrast,
+use every observation available for each predictor.
+
+\subsection{Analytical methods}
+\label{subsec:methods}
+
+% Embasamento teorico exigido pelo enunciado. Definir cada estatistica
+% e dizer o que ela informa.
+For each predictor $d$ we compute the mean $\mu_d$, the standard
+deviation $\sigma_d$ and the skewness $\gamma_d$,
+\begin{equation}
+\gamma_d = \frac{1}{N}\sum_{n=1}^{N}
+\left(\frac{x_{n,d}-\mu_d}{\sigma_d}\right)^{3},
+\label{eq:skew}
+\end{equation}
+which quantifies the imbalance between the tails of a distribution and
+vanishes for any density symmetric about its mean,
+together with the excess kurtosis, the analogous fourth-order moment
+minus three, and their class-conditional counterparts $\mu_{d|l}$,
+$\sigma_{d|l}$ and $\gamma_{d|l}$ over the $N_l$ observations of each
+class $l$. Skewness vanishes for any symmetric distribution and so
+cannot by itself distinguish a Gaussian from a uniform density, whereas
+the excess kurtosis separates them cleanly: it is $0$ for the Gaussian
+and $-6/5$ for the uniform. We therefore report both.
+
+% Correlacao de Pearson: dizer o que capta e o que NAO capta.
+Linear dependence between pairs of predictors is quantified by the
+Pearson correlation coefficient
+\begin{equation}
+\rho_{d_i,d_j} =
+\frac{\mathbb{E}\left[(X_{d_i}-\mu_{d_i})(X_{d_j}-\mu_{d_j})\right]}
+{\sigma_{d_i}\sigma_{d_j}},
+\label{eq:pearson}
+\end{equation}
+which captures linear association only. A vanishing $\rho$ does not
+imply independence in general, so we treat the correlation matrix as
+one piece of evidence among three rather than as a conclusion.
+
+% Poder discriminativo: definir a metrica usada, pois nao e padrao.
+To rank predictors by their ability to separate classes on their own,
+we use the ratio between the range of the class-conditional means and
+the unconditional standard deviation,
+\begin{equation}
+\delta_d = \frac{\max_l \mu_{d|l} - \min_l \mu_{d|l}}{\sigma_d},
+\label{eq:discrim}
+\end{equation}
+so that $\delta_d$ expresses the class separation in units of the
+predictor's own spread and is comparable across predictors measured in
+different physical units.
+
+% PCA implementado do zero: o enunciado EXIGE que se diga isso.
+Finally, the principal component analysis was implemented from
+scratch, without pre-made PCA functions or libraries, following the
+standard chain \cite{jolliffe2002}: standardisation, estimation of the
+covariance matrix $\mathbf{S}$, eigendecomposition
+$\mathbf{S} = \mathbf{V}\boldsymbol{\Lambda}\mathbf{V}^{\top}$, and
+projection of the observations onto the two eigenvectors of largest
+eigenvalue. The only library routine used is the symmetric
+eigensolver.
+
+% =====================================================================
+% III. RESULTS (35 pts) -- alvo: 2,5 paginas. Secao que decide a nota.
+% Quatro blocos, na ordem das perguntas do enunciado.
+% =====================================================================
+\section{Results and Discussion}
+\label{sec:results}
+
+\subsection{Unconditional univariate analysis}
+\label{subsec:uncond}
+
+% Bloco 1. Tabela completa + histogramas.
+Table~\ref{tab:uncond} reports $\mu_d$, $\sigma_d$, $\gamma_d$, the
+excess kurtosis and the observed range of the 20 quantitative
+predictors, and Fig.~\ref{fig:hist} shows the corresponding
+histograms.
+
+\begin{table*}[htbp]
+\caption{Unconditional univariate statistics of the 20 quantitative
+predictors. The excess kurtosis of a uniform distribution is $-6/5$.}
+\label{tab:uncond}
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+Predictor & $\mu_d$ & $\sigma_d$ & $\gamma_d$ & Excess kurtosis & Range \\
+\midrule
+\input{tabelas/uncond}\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{histogramas_incondicionais.png}
+\caption{Unconditional histograms of the 20 quantitative predictors.
+All but the body mass index are visibly flat-topped.}
+\label{fig:hist}
+\end{figure}
+
+% O achado: quase tudo e uniforme, nao gaussiano.
+Nearly every predictor shows a practically null skewness, ranging from
+$-0.015$ to $+0.008$, with the notable exception of BMI
+($\gamma = 0.432$). Such symmetry, however, does not imply normality,
+since a uniform density is strictly symmetric as well; the decisive
+quantity is the kurtosis. Nineteen of the twenty predictors have an
+excess kurtosis between $-1.21$ and $-1.19$, matching the theoretical
+value of $-6/5$ expected for a uniform distribution. This is
+corroborated by the histograms of Fig.~\ref{fig:hist}, which are
+visibly flat and truncated at round limits chosen for convenience
+rather than at physiological ones: age from 18 to 90 years, heart rate
+from 50 to 120 bpm, triglycerides from 60 to 400~mg/dL and sleep from
+3 to 10 hours. The reading these figures impose is that the predictors
+do not reflect measurements taken from real patients, but were drawn
+from predefined uniform distributions. This is the first of three
+analytical signals that will converge in Section~\ref{subsec:pca}.
+
+Body mass index escapes this otherwise general artificial pattern,
+showing a positive skewness and a kurtosis of $-0.45$ against the
+$-1.2$ of the remaining variables. The divergence arises because BMI
+was not drawn by the generator but computed algebraically as the
+quotient $\mathrm{weight}/\mathrm{height}^2$, and the ratio of two
+independent uniform variables is not itself uniform. The exception
+therefore confirms that reading rather than weakening it: BMI is the
+one predictor the generator did not draw.
+
+\subsection{Class-conditional analysis and discriminative power}
+\label{subsec:cond}
+
+% Bloco 2. O coracao do trabalho: algum preditor separa sozinho?
+Table~\ref{tab:discrim} reports the class-conditional means and ranks
+the predictors by the discriminative power of \eqref{eq:discrim};
+Fig.~\ref{fig:histcond} shows the class-conditional histograms and
+Fig.~\ref{fig:boxcond} the box-plots of the four strongest predictors.
+
+\begin{table}[htbp]
+\caption{Class-conditional means and discriminative power $\delta_d$,
+predictors sorted by $\delta_d$}
+\label{tab:discrim}
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Predictor & $\mu_{d|\mathrm{Low}}$ & $\mu_{d|\mathrm{Mod}}$
+& $\mu_{d|\mathrm{High}}$ & $\delta_d$ \\
+\midrule
+\input{tabelas/discrim}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{histogramas_condicionais.png}
+\caption{Class-conditional histograms of the 20 quantitative
+predictors, normalised to unit area.}
+\label{fig:histcond}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{boxplots_condicionais.png}
+\caption{Class-conditional box-plots of the four most discriminative
+predictors.}
+\label{fig:boxcond}
+\end{figure}
+
+% A resposta direta a pergunta do enunciado.
+The answer to whether any predictor separates the classes on its own
+is affirmative, and two markers stand out: fasting blood sugar
+($\delta = 1.44$) and HbA1c ($\delta = 1.38$). The discriminative
+capacity then falls substantially, to age ($\delta = 0.84$), BMI
+($\delta = 0.61$) and weight ($\delta = 0.57$). The remaining fifteen
+predictors all stay below $\delta = 0.5$, and ten of them below
+$\delta = 0.1$, a range in which the separation between groups is
+indistinguishable from noise.
+
+% Os numeros clinicos que valem citar.
+From a clinical standpoint, the predictors with the greatest
+separating power display values and progressions that make full
+physiological sense \cite{ada2024}. HbA1c rises from $5.67\%$ in the
+low-risk class to $8.86\%$ in the high-risk one, which is exactly the
+transition from the normal to the diabetic range, while fasting blood
+sugar goes from $88.4$ to $152.8$~mg/dL, comfortably crossing the
+diagnostic threshold of 126~mg/dL. Age advances from $38.8$ to $56.5$
+years and BMI evolves from $25.6$ to $31.9$, a clear progression from
+overweight to obesity. Under this strict reading of isolated means,
+the dominant predictors are the clinically correct ones.
+
+% As tres criticas. Isto e leitura critica, nao descricao: vale ponto.
+Three observations qualify this apparent clinical fidelity.
+First, casual blood glucose has a practically null discriminative
+power ($\delta = 0.020$) and behaves as mere noise, whereas fasting
+blood sugar dominates the separation ($\delta = 1.44$). Since both
+measure the same physiological substrate and move together in a real
+patient, the generator evidently derived the labels from one and
+ignored the other.
+
+Second, waist circumference, although an established marker of
+metabolic and cardiovascular risk, does not separate the classes in
+this synthetic set ($\delta = 0.041$). In further contradiction with
+physiology, its mean value decreases slightly as the diabetic risk
+increases, from $100.85$ to $99.91$~cm.
+
+Third, mean height decreases from $173.7$ to $169.4$~cm as risk rises,
+with $\delta = 0.30$, which has no medical basis whatsoever. This
+distortion is a strictly algebraic consequence of BMI driving the
+assignment of the labels: at equal weight, shorter individuals have a
+mathematically larger BMI, so height inherits an inverted correlation
+with the disease that it would never hold in a real population.
+
+\subsection{Bivariate analysis}
+\label{subsec:bivar}
+
+% Bloco 3. Matriz de correlacao + scatter matrix.
+Fig.~\ref{fig:corr} shows the correlation matrix and
+Fig.~\ref{fig:scatter} the pairwise scatter plots, coloured by class.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{matriz_correlacao.png}
+\caption{Pairwise Pearson correlation matrix of the 20 quantitative
+predictors.}
+\label{fig:corr}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{scatter_matrix.png}
+\caption{Pairwise scatter plots of the quantitative predictors on a
+random subsample of 3{,}000 observations, coloured by risk class.}
+\label{fig:scatter}
+\end{figure}
+
+% O segundo sinal: correlacoes nulas em quase todos os pares.
+The correlation matrix approaches an identity matrix closely, with a
+median absolute off-diagonal correlation of $0.003$. Only two pairs
+depart from this pattern of total independence: BMI with weight
+($\rho = +0.843$) and BMI with height ($\rho = -0.516$). These two
+coefficients, however, reflect nothing but the mathematical definition
+of the index itself, and are not an empirical or biological finding.
+Consistently with uniform and independent predictors, the point clouds
+of Fig.~\ref{fig:scatter} form rectangles devoid of latent structure,
+and no pair of variables separates the classes visually. This absence
+of linear dependence is the second signal.
+
+% O achado mais interessante da secao.
+The least plausible finding of the correlation matrix is that the only
+two predictors with relevant discriminative power are statistically
+uncorrelated with each other ($\rho = -0.005$). In a real patient
+HbA1c and fasting blood sugar are strongly correlated, since the
+former integrates the average glycaemia of the preceding weeks. Here
+the disease label depends on both variables along mathematically
+independent paths, which is physiologically impossible and is
+explained only by the rules of the generating process, and it is the
+sharpest illustration of that second signal.
+
+\subsection{Principal component analysis}
+\label{subsec:pca}
+
+% Bloco 4. O resultado mais forte, e ele e negativo. Tudo bem.
+Table~\ref{tab:eigen} lists the eigenvalue spectrum and
+Fig.~\ref{fig:pca} shows the projection onto the first two components.
+
+\begin{table}[htbp]
+\caption{Eigenvalue spectrum of the standardised covariance matrix
+($20$ components, $33{,}689$ complete observations)}
+\label{tab:eigen}
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Component & $\lambda$ & Explained & Cumulative \\
+\midrule
+\input{tabelas/eigen}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{pca_projecao.png}
+\caption{Observations projected onto the first two principal
+components, coloured by risk class.}
+\label{fig:pca}
+\end{figure}
+
+% A assinatura dos autovalores: terceiro sinal, vindo de um terceiro
+% metodo.
+After standardisation the eigenvalues sum to 20, so a set of mutually
+uncorrelated predictors would yield twenty eigenvalues equal to $1$.
+That is very nearly what is observed: components PC2 to PC19 lie
+between $0.956$ and $1.037$, confined to a band of less than $5\%$
+around unity. Such a flat spectrum is the classical signature of an
+absence of linear structure. It constitutes the third independent
+signal, produced by a third statistical method, pointing at the same
+fact that the kurtosis analysis and the correlation matrix had already
+indicated.
+
+% As duas excecoes sao a mesma coisa: a identidade do IMC.
+The only departures from the flatness of the spectrum are the first
+component ($\lambda = 1.994$) and the last one ($\lambda = 0.0123$).
+The first concentrates its loadings almost exclusively on BMI
+($-0.706$), weight ($-0.602$) and height ($+0.372$), everything else
+staying below $0.02$ in absolute value, while the last mirrors exactly
+the same triple with BMI $+0.708$, weight $-0.603$ and height
+$+0.368$. The reading is that the analysis isolated, unprompted, the
+algebraic identity by which BMI is strictly derived from weight and
+height. The largest variance of the set therefore lies in the plane
+spanned by these three variables, and the near-null eigenvalue
+measures the almost deterministic dependence among them, almost and
+not exactly because the relation is non-linear and the method captures
+only its best linear approximation. It is the single structural
+relation present in the data.
+
+% Responder LITERALMENTE as tres perguntas do enunciado.
+Answering the three questions directly, the classes are not well
+separated in the projection, and are in fact separated \emph{worse}
+than in the univariate analysis of HbA1c or fasting blood sugar.
+Second, no linear decision boundary is visible that would distinguish
+the risk groups in the projected space. Finally, \emph{Moderate}
+overlaps \emph{High} heavily, while \emph{Low} becomes practically
+invisible, both because of its small sample size, only 470 points, and
+because it occupies the very same region as the other two.
+
+% Paragrafo de fechamento: a tensao entre os dois achados.
+The apparent contradiction between the strong signal found in the
+univariate analysis and the absence of separation under PCA dissolves
+once it is understood that the two measure distinct properties. The
+first two components explain only $15.2\%$ of the variance because the
+spectrum is flat and no dominant direction exists to concentrate it.
+The projection fails to separate the classes for a different reason:
+the method maximises variance, not separability, and when the
+predictors are almost all independent there is no high-variance
+direction in which the class information happens to lie. Moreover, the
+single high-variance direction the set does possess, that of BMI, is
+merely an algebraic relation with no discriminative content of its
+own. PCA did not fail; it correctly reported that there is no
+multivariate structure to report.
+
+% =====================================================================
+% IV. CONCLUSION
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+The exploratory analysis produced three independent pieces of evidence
+that converge on the same fact: the uniform kurtosis of nineteen of
+the twenty predictors, the median of $0.003$ among the off-diagonal
+correlations, and the flat eigenvalue spectrum. Together they indicate
+that the predictors were sampled from independent uniform
+distributions over round numerical intervals, and that the diagnostic
+label was assigned afterwards as a function of a restricted group of
+variables, chiefly fasting blood sugar, HbA1c, age and BMI.
+Consequently the only structural interdependence present in this
+dataset is strictly algebraic, with no grounding in real physiology.
+
+In practical terms, a synthetic dataset with these characteristics
+serves perfectly well to exercise the methodological flow of data
+analysis, which is the scope and the objective of this work. It is,
+on the other hand, strictly inadequate as a basis for clinical
+conclusions or for realistically testing multivariate methods,
+precisely because the covariance those algorithms exist to exploit was
+suppressed at generation time. A classifier trained here would reach a
+very high apparent performance while relying on two predictors alone,
+and that behaviour would not transfer to real medical records.
+Recording and documenting this structural artificiality is, in itself,
+the most robust result this exploratory analysis delivers.
+
+% =====================================================================
+% Declaracao de uso de IA. O enunciado permite que os prompts e as
+% respostas fiquem num arquivo separado do repositorio, e e la que
+% estao, para nao ocupar as 6 paginas do artigo.
+\section*{Use of AI Tools}
+AI assistance (Anthropic Claude) was used in this work for code
+debugging, for verification queries over the dataset, for structuring
+the text and for checking the references. The prompts, the responses
+and the use made of each are recorded in \texttt{USO\_DE\_IA.md} in
+the project repository.
+
+% =====================================================================
+% REFERENCES -- minimo 5 ou 6.
+% =====================================================================
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
