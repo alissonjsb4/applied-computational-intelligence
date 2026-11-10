@@ -10,33 +10,10 @@
 
 \graphicspath{{../figuras/}}
 
-% As tabelas sao geradas por paper/gerar_tabelas.py a partir do dataset.
-% Nunca editar tabelas/*.tex na mao: rode o script de novo.
-
 \begin{document}
 
-% =====================================================================
-% TITLE (5 pts)
-% Alternativas consideradas (o enunciado pede que se tente mais de uma):
-%   A) Exploratory Analysis of a 50,000-Patient Synthetic Diabetes Risk
-%      Dataset: Strong Univariate Separability with Near-Absent
-%      Multivariate Structure                                  <- segura
-%   B) What Principal Component Analysis Reveals About a Synthetic
-%      Dataset: Glycemic Markers Separate Diabetes Risk Classes
-%      That PCA Cannot                                    <- mais forte
-%   C) Fasting Glucose and HbA1c Alone Separate Diabetes Risk Classes
-%      in a Synthetic 50,000-Patient Cohort
-% =====================================================================
-\title{Exploratory Analysis of a 50{,}000-Patient Synthetic Diabetes
-Risk Dataset: Strong Univariate Separability with Near-Absent
-Multivariate Structure}
+\title{Linear Regularisation, Latent Projections, and Neural Ensembles for Predicting Aqueous Solubility from Molecular Descriptors}
 
-% Com 4 autores o \and do IEEEtran joga todos numa linha so e as colunas
-% ficam com larguras diferentes, porque os nomes tem tamanhos diferentes.
-% Duas linhas de dois, em minipages de largura fixa, ficam simetricas.
-% Os macros \IEEEauthorblockN/A so funcionam na estrutura propria do \author
-% do IEEEtran, entao dentro da minipage usamos formatacao direta, com os
-% mesmos corpos de letra que eles aplicam.
 \newcommand{\autorbloco}[2]{%
   \begin{minipage}[t]{0.46\textwidth}\centering
   {\normalsize #1}\\[0.35em]
@@ -45,8 +22,6 @@ Multivariate Structure}
   \textit{Universidade Federal do Ceará}}
   \end{minipage}}
 
-% O \author do IEEEtran ja e um ambiente tabular, entao um \\ solto abriria
-% linha nova nesse tabular e quebraria a compilacao. O \parbox isola.
 \author{%
 \parbox{\textwidth}{\centering
 \autorbloco{Ícaro Adriano}{609310}\hfill\autorbloco{Matheus Reis}{571954}\\[1.4em]
@@ -55,527 +30,413 @@ Multivariate Structure}
 
 \maketitle
 
-% =====================================================================
-% ABSTRACT (10 pts) -- 4 frases: objetivo, dados, metodos, resultado.
-% ATENCAO: nao prometer machine learning. O trabalho e exploratorio.
-% =====================================================================
 \begin{abstract}
-% [1] Objetivo
-This work presents an exploratory analysis of a publicly available
-synthetic dataset of diabetes risk, with the goal of characterising
-which of its predictors carry discriminative information before any
-predictive model is considered.
-% [2] Dados
-The dataset comprises $N = 50{,}000$ records, $D = 22$ predictors and
-$L = 3$ risk classes, with a strongly imbalanced class distribution in
-which the \emph{Low} class holds only $0.94\%$ of the observations.
-% [3] Metodos
-We combine unconditional and class-conditional univariate statistics,
-pairwise Pearson correlation and a principal component analysis (PCA)
-implemented from first principles, without recourse to pre-made PCA
-routines.
-% [4] Resultado principal
-Two glycemic markers, fasting blood sugar and HbA1c, separate the risk
-classes almost by themselves, yet the first two principal components
-account for only $15.2\%$ of the total variance. Three independent
-lines of evidence, an excess kurtosis of $-1.2$ in 19 of the 20
-quantitative predictors, a median absolute pairwise correlation of
-$0.003$, and an eigenvalue spectrum flat at unity, converge on the same
-conclusion: the predictors were drawn independently from bounded
-uniform distributions, and the only structural relationship the data
-contain is the algebraic identity that defines the body mass index.
+Predicting aqueous solubility directly from molecular structure is a central regression problem in computational chemistry and early-stage drug discovery. This study evaluates four regression models on a dataset of $1{,}267$ chemical compounds ($951$ training and $316$ test observations) characterised by $228$ collinear molecular descriptors subjected to Yeo-Johnson transformation and standardisation. We implement ordinary least squares (OLS), $L_2$-penalised ridge regression, and partial least squares (PLS) via the NIPALS algorithm from scratch, comparing them against a regularised multilayer perceptron (MLP) ensemble using cross-validation and paired bootstrap resampling. While ridge regression ($\mathrm{RMSE} = 0.7175$, $R^2 = 0.8805$), PLS ($\mathrm{RMSE} = 0.7337$, $R^2 = 0.8750$), and OLS ($\mathrm{RMSE} = 0.7430$, $R^2 = 0.8718$) perform comparably on the test set without statistically significant differences among them, the nonlinear neural network ensemble achieves a test $\mathrm{RMSE}$ of $0.6407$ ($R^2 = 0.9047$), outperforming all linear estimators even after Bonferroni correction.
 \end{abstract}
 
 \begin{IEEEkeywords}
-exploratory data analysis, principal component analysis, synthetic
-data, diabetes risk, class separability
+aqueous solubility, ordinary least squares, ridge regression, partial least squares, neural networks
 \end{IEEEkeywords}
 
 % =====================================================================
-% I. INTRODUCTION (20 pts) -- alvo: 1 pagina, 4 paragrafos.
+% I. INTRODUCTION
 % =====================================================================
 \section{Introduction}
 \label{sec:intro}
 
-% --- P1: diabetes como problema de saude publica + deteccao precoce.
-% Referencias externas entram aqui (IDF/ADA).
-Diabetes mellitus is one of the largest public health burdens
-worldwide \cite{idf2021}. In 2024, 589 million adults aged 20 to 79
-years, one in every nine, were living with the condition, and this
-figure is projected to reach 853 million by 2050, a 45\% rise against
-a projected population growth of 25\%. A further 252 million adults
-are estimated to be unaware that they have it. The disease accounted
-for 3.4 million deaths and for at least USD 1 trillion in health
-expenditure in that single year, which is what makes early detection
-consequential: it opens a window for treatment and lifestyle
-intervention before microvascular and cardiovascular complications
-become established.
+Aqueous solubility governs compound bioavailability, membrane permeation, and formulation viability in pharmaceutical development \cite{kuhn2013}. Because experimental assays across large chemical libraries are costly and time-consuming, quantitative structure-property relationship (QSPR) models seek to estimate logarithmic solubility directly from numerical molecular descriptors. In statistical learning terms, this constitutes a supervised multivariate regression problem in which a continuous response $y \in \mathbb{R}$ is approximated from a predictor vector $\mathbf{x} \in \mathbb{R}^{D}$.
 
-% --- P2: por que analise exploratoria antes de modelagem.
-% Este paragrafo justifica a existencia do trabalho.
-Fitting a classifier without a prior exploratory analysis makes it
-impossible to tell whether the performance obtained reflects genuine
-clinical patterns or artefacts of the data. Descriptive statistics and
-linear projections expose, beforehand, redundancy among predictors,
-disparities of scale, outliers and the degree of overlap between the
-classes. Without that map of the underlying structure, neither the
-success nor the failure of a model can be diagnosed.
+Chemical descriptor matrices present two classical challenges for regression estimators: severe skewness in topological counts and near-exact multicollinearity among structural fingerprints \cite{hastie2009}. Unregularised ordinary least squares (OLS) yields unbiased linear predictions under standard Gauss-Markov assumptions, but its coefficient variance inflates rapidly as singular values of the design matrix approach zero \cite{golub2013}. Two distinct linear strategies address this ill-conditioning: continuous shrinkage via $L_2$ regularisation (ridge regression) \cite{hoerl1970} and supervised dimension reduction onto orthogonal latent factors via partial least squares (PLS). However, linear projections cannot capture higher-order interactions among functional groups unless nonlinear mappings, such as feedforward neural networks, are introduced.
 
-% --- P3: datasets sinteticos em saude. ESTE e o paragrafo que
-% diferencia o trabalho: privacidade, volume, ensino, e as limitacoes.
-% Prepara a discussao dos resultados e a conclusao.
-The use of synthetic datasets in health care has grown as a way of
-circumventing strict patient privacy constraints, of compensating for
-the scarcity of records and of enabling educational applications
-\cite{synthetic2021}. That convenience, however, carries the risk that
-the generating process fails to reproduce the complex physiological
-interdependencies present in real clinical populations. When
-multivariate relationships are not preserved, algorithms trained on
-such data tend to learn mathematical artefacts rather than legitimate
-biological mechanisms. It is in this context that the dataset analysed
-here belongs, its origin being explicitly synthetic \cite{kaggle2024}.
-
-% --- P4: objetivo e organizacao do artigo.
-This work presents an exploratory and multivariate characterisation of
-a synthetic dataset of diabetes risk, assessing its statistical
-consistency and its clinical fidelity before any modelling step. We
-investigate the dependencies among predictors and determine to what
-extent the risk classes are structurally separable, both in the
-original predictor space and under projections of maximum variance.
-The remainder of this paper is organised as follows.
-Section~\ref{sec:methods} describes the dataset and the analytical
-methods. Section~\ref{sec:results} reports and discusses the results.
-Section~\ref{sec:conclusion} concludes.
+In this work, we implement OLS, ridge regression, and PLS from scratch, verify their numerical agreement against reference implementations \cite{pedregosa2011}, and compare their generalisation capacity against a regularised multilayer perceptron (MLP) ensemble. Section~\ref{sec:methods} details the dataset pre-processing, mathematical formulations, and resampling protocols; Section~\ref{sec:results} presents the cross-validation profiles, test-set predictions, and paired bootstrap comparisons; and Section~\ref{sec:conclusion} summarises our findings.
 
 % =====================================================================
-% II. METHODS (30 pts) -- alvo: 1,5 pagina.
-% Regra do enunciado: TODA figura e TODA tabela citada e comentada
-% no texto corrido. Nenhuma float orfa.
+% II. METHODS
 % =====================================================================
 \section{Methods}
 \label{sec:methods}
 
-\subsection{Dataset}
+\subsection{Dataset and pre-processing}
 \label{subsec:dataset}
 
-% Fonte, natureza sintetica, N, D, L.
-The dataset was obtained from Kaggle \cite{kaggle2024} and is
-explicitly described by its authors as a large-scale \emph{synthetic}
-healthcare dataset. The raw file holds 41 columns, from which we
-discard \texttt{Patient\_ID}, a row identifier carrying no
-physiological information, and \texttt{Diabetes\_Risk\_Score}, the
-continuous score from which the categorical label is derived. This
-leaves $N = 50{,}000$ observations and $D = 22$ predictors, of which 20
-are quantitative and two (\texttt{Country} and \texttt{Gender}) are
-categorical. The class label \texttt{Diabetes\_Risk} takes $L = 3$
-values.
+The data are the solubility set distributed with \cite{kuhn2013}, with
+$N = 1{,}267$ chemical compounds split into $951$ training and $316$
+test observations. Each compound is described by $D = 228$ predictors:
+208 binary fingerprints, 16 count descriptors and 4 continuous
+descriptors. The outcome is the log solubility of the compound.
 
-% Distribuicao de classes: comentar o desbalanceamento (Low < 1%).
-Table~\ref{tab:classdist} reports the class distribution.
-The disparity between the 36{,}593 observations of class \emph{High}
-and the 470 of class \emph{Low}, a ratio of 78 to 1 and a mere
-$0.94\%$ of the sample, imposes structural limits on the analysis. It
-renders the class-conditional estimates of the minority class
-unstable, and it would compromise the evaluation of any future
-classifier, since a naive model that constantly predicts \emph{High}
-would already reach $73\%$ accuracy.
+All 20 non-binary predictors are right-skewed, so they receive a
+Yeo-Johnson transformation \cite{yeo2000}; the binary predictors are
+left unchanged. Every predictor is then centred and scaled to unit
+standard deviation. The transformation parameters, means and standard
+deviations are estimated on the fitting data only and re-applied,
+without re-estimation, to the data being evaluated. The transformed
+predictors are strongly collinear: 47 pairs have $|r| > 0.9$, and
+\texttt{FP134} and \texttt{NumSulfer} are nearly duplicates
+($r = 1.000$ to three decimals).
 
-\begin{table}[htbp]
-\caption{Class distribution of \texttt{Diabetes\_Risk}}
-\label{tab:classdist}
-\centering
-\begin{tabular}{lrr}
-\toprule
-Class & $N_l$ & Share \\
-\midrule
-\input{tabelas/classdist}\\
-\midrule
-Total & 50{,}000 & 100.00\% \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Ordinary least squares}
+\label{subsec:ols}
 
-% Valores faltantes: o padrao de exatos 1000 no painel lipidico
-% e observacao propria e vale ponto.
-Table~\ref{tab:missing} summarises the missing values, which affect 12
-of the 20 quantitative predictors.
-Four of them are missing \emph{exactly} one thousand values each, and
-those four are precisely the complete lipid panel: total cholesterol,
-HDL, LDL and triglycerides. A fifth column outside the quantitative
-set, medication adherence, shows the same round count. Natural record
-loss does not produce an identical round figure across five variables,
-so the absences were evidently injected by the generator. They were
-not injected by examination, however: no observation lacks all four
-lipid measurements at once, and the pairwise overlap between them
-ranges from 12 to 21 rows, which is what independent sampling of $2\%$
-of the records would yield. In clinical practice a lipid panel is a
-single blood draw and its four results go missing together; here a
-fixed quota of one thousand absences was drawn column by column,
-ignoring that dependency.
-
-\begin{table}[htbp]
-\caption{Missing values (only affected predictors shown)}
-\label{tab:missing}
-\centering
-\begin{tabular}{lr}
-\toprule
-Predictor & Missing \\
-\midrule
-\input{tabelas/missing}\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Pre-processing}
-\label{subsec:preproc}
-
-% Padronizacao e dropna, com a limitacao dos 33%.
-Standardising the variables to zero mean and unit variance before the
-principal component analysis is mandatory, since the raw predictors
-operate on widely disparate scales (mg/dL, kg, cm, years); without
-that correction the variables of larger magnitude would dominate the
-covariance matrix and the analysis would describe the units of
-measurement rather than the intrinsic structure of the data.
-Furthermore, because the covariance matrix requires complete records,
-the rows holding missing values were removed. This exclusion reduced
-the set from $50{,}000$ to $33{,}689$ observations, that is, $32.6\%$
-of the data discarded, and it establishes a methodological limitation:
-the multivariate analysis describes a complete subset and not the
-entire cohort. The univariate and bivariate statistics, in contrast,
-use every observation available for each predictor.
-
-\subsection{Analytical methods}
-\label{subsec:methods}
-
-% Embasamento teorico exigido pelo enunciado. Definir cada estatistica
-% e dizer o que ela informa.
-For each predictor $d$ we compute the mean $\mu_d$, the standard
-deviation $\sigma_d$ and the skewness $\gamma_d$,
+With $\mathbf{X}$ centred on the fitting data and
+$\mathbf{y}_c = \mathbf{y} - \bar{y}$, the intercept equals $\bar{y}$
+and the ordinary least squares (OLS) coefficients are
 \begin{equation}
-\gamma_d = \frac{1}{N}\sum_{n=1}^{N}
-\left(\frac{x_{n,d}-\mu_d}{\sigma_d}\right)^{3},
-\label{eq:skew}
+\hat{\boldsymbol{\beta}} =
+(\mathbf{X}^{\top}\mathbf{X})^{+}\mathbf{X}^{\top}\mathbf{y}_c =
+\mathbf{X}^{+}\mathbf{y}_c,
+\label{eq:ols}
 \end{equation}
-which quantifies the imbalance between the tails of a distribution and
-vanishes for any density symmetric about its mean,
-together with the excess kurtosis, the analogous fourth-order moment
-minus three, and their class-conditional counterparts $\mu_{d|l}$,
-$\sigma_{d|l}$ and $\gamma_{d|l}$ over the $N_l$ observations of each
-class $l$. Skewness vanishes for any symmetric distribution and so
-cannot by itself distinguish a Gaussian from a uniform density, whereas
-the excess kurtosis separates them cleanly: it is $0$ for the Gaussian
-and $-6/5$ for the uniform. We therefore report both.
+where $(\cdot)^{+}$ is the Moore-Penrose pseudoinverse
+\cite{golub2013}. The estimator was implemented from scratch through
+the singular value decomposition
+$\mathbf{X} = \mathbf{U}\mathbf{S}\mathbf{V}^{\top}$, discarding
+singular values below $\max(n,p)\,\varepsilon\,s_{\max}$. Working on
+$\mathbf{X}$ avoids squaring its condition number, and the
+pseudoinverse returns the minimum-norm solution when the rank drops.
+OLS has no tuning parameter and is directly interpretable, but its
+coefficients become unstable under collinearity \cite{hastie2009}.
 
-% Correlacao de Pearson: dizer o que capta e o que NAO capta.
-Linear dependence between pairs of predictors is quantified by the
-Pearson correlation coefficient
+\subsection{Ridge regression}
+\label{subsec:ridge}
+
+Ridge regression \cite{hoerl1970} penalises the squared norm of the
+coefficients and leaves the intercept unpenalised. With the same
+centring, the solution is
 \begin{equation}
-\rho_{d_i,d_j} =
-\frac{\mathbb{E}\left[(X_{d_i}-\mu_{d_i})(X_{d_j}-\mu_{d_j})\right]}
-{\sigma_{d_i}\sigma_{d_j}},
-\label{eq:pearson}
+\hat{\boldsymbol{\beta}}(\lambda) =
+(\mathbf{X}^{\top}\mathbf{X} + \lambda\mathbf{I})^{-1}
+\mathbf{X}^{\top}\mathbf{y}_c =
+\mathbf{V}\,\mathrm{diag}\!\left(\frac{s_i}{s_i^{2}+\lambda}\right)
+\mathbf{U}^{\top}\mathbf{y}_c.
+\label{eq:ridge}
 \end{equation}
-which captures linear association only. A vanishing $\rho$ does not
-imply independence in general, so we treat the correlation matrix as
-one piece of evidence among three rather than as a conclusion.
+The form on the right, also implemented from scratch, needs a single
+decomposition for the whole search. The penalty shrinks the directions
+of small singular value and so stabilises the coefficients, at the cost
+of a bias and of having to select $\lambda$. We search 29 values spaced
+logarithmically between $10^{-3}$ and $10^{4}$ and take the value that
+minimises the mean cross-validated RMSE.
 
-% Poder discriminativo: definir a metrica usada, pois nao e padrao.
-To rank predictors by their ability to separate classes on their own,
-we use the ratio between the range of the class-conditional means and
-the unconditional standard deviation,
-\begin{equation}
-\delta_d = \frac{\max_l \mu_{d|l} - \min_l \mu_{d|l}}{\sigma_d},
-\label{eq:discrim}
-\end{equation}
-so that $\delta_d$ expresses the class separation in units of the
-predictor's own spread and is comparable across predictors measured in
-different physical units.
+\subsection{Resampling and performance measures}
+\label{subsec:cv}
 
-% PCA implementado do zero: o enunciado EXIGE que se diga isso.
-Finally, the principal component analysis was implemented from
-scratch, without pre-made PCA functions or libraries, following the
-standard chain \cite{jolliffe2002}: standardisation, estimation of the
-covariance matrix $\mathbf{S}$, eigendecomposition
-$\mathbf{S} = \mathbf{V}\boldsymbol{\Lambda}\mathbf{V}^{\top}$, and
-projection of the observations onto the two eigenvectors of largest
-eigenvalue. The only library routine used is the symmetric
-eigensolver.
+Cross-validation uses the training set only, in 10 folds of 95 or 96
+compounds drawn with a fixed seed and shared by the OLS, ridge, and PLS
+analyses. In each fold, the pre-processing and the model are estimated
+on the other nine folds and applied to the held-out fold. Performance
+is measured by $\mathrm{RMSE}$ and by
+$R^2 = 1 - \mathrm{SSE}/\mathrm{SST}$, averaged over the folds, with
+the standard error of the mean. Both the models and the cross-validation
+were compared with \texttt{LinearRegression}, \texttt{Ridge},
+\texttt{cross\_validate} and \texttt{GridSearchCV} from scikit-learn
+\cite{pedregosa2011}, with the pre-processing placed inside a
+\texttt{Pipeline} to preserve the separation between folds. Test-set
+uncertainty is expressed by $95\%$ percentile bootstrap intervals
+\cite{efron1993} over 5000 resamples of the 316 test compounds.
+
+\subsection{Partial least squares and neural network}
+\label{subsec:pls-nn}
+
+Partial least squares (PLS) constructs $A \le D$ orthogonal latent
+scores $\mathbf{t}_a = \mathbf{X}_{a-1}\mathbf{w}_a$ that maximise the
+sample covariance with the deflated response \cite{hastie2009}. We
+implemented the univariate NIPALS algorithm from scratch: at step $a$,
+weights $\mathbf{w}_a = \mathbf{X}_{a-1}^{\top}\mathbf{y}_{a-1} /
+\|\mathbf{X}_{a-1}^{\top}\mathbf{y}_{a-1}\|_2$ produce scores
+$\mathbf{t}_a$, loadings $\mathbf{p}_a =
+\mathbf{X}_{a-1}^{\top}\mathbf{t}_a / (\mathbf{t}_a^{\top}\mathbf{t}_a)$,
+and response weights $q_a = \mathbf{y}_{a-1}^{\top}\mathbf{t}_a /
+(\mathbf{t}_a^{\top}\mathbf{t}_a)$, followed by rank-one deflation of
+$\mathbf{X}_{a-1}$ and $\mathbf{y}_{a-1}$. Accumulating $A$ components
+yields the direct regression vector $\hat{\boldsymbol{\beta}}_{\mathrm{PLS}}(A) =
+\mathbf{W}(\mathbf{P}^{\top}\mathbf{W})^{-1}\mathbf{q}$. We evaluate
+$A \in \{1,\dots,40\}$ via 10-fold CV. PLS handles collinearity via
+supervised projection and reduces dimensionality, though latent factors
+mix all original descriptors.
+
+To capture nonlinear interactions, we train feedforward multilayer
+perceptrons (MLPs) with ReLU activations, dropout, and $L_2$ weight
+decay using AdamW ($\eta = 10^{-3}$, batch size $64$) on standardised
+targets. Because neural networks are sensitive to hyperparameter choices
+and random weight initialisation, we perform a 5-fold cross-validation
+grid search over architectures $\{(16,), (64,), (128,), (64, 32)\}$,
+weight decay $\{10^{-2}, 10^{-1}, 1.0\}$, dropout $\{0.0, 0.3\}$, and
+training epochs from $25$ to $300$ in steps of $25$. The final predictor averages
+an ensemble of $5$ independently initialised networks trained on the full
+training set under the selected configuration, reducing variance at the
+cost of higher computational effort and lower interpretability.
 
 % =====================================================================
-% III. RESULTS (35 pts) -- alvo: 2,5 paginas. Secao que decide a nota.
-% Quatro blocos, na ordem das perguntas do enunciado.
+% III. RESULTS
 % =====================================================================
 \section{Results and Discussion}
 \label{sec:results}
 
-\subsection{Unconditional univariate analysis}
-\label{subsec:uncond}
+\subsection{Ordinary least squares}
+\label{subsec:res-ols}
 
-% Bloco 1. Tabela completa + histogramas.
-Table~\ref{tab:uncond} reports $\mu_d$, $\sigma_d$, $\gamma_d$, the
-excess kurtosis and the observed range of the 20 quantitative
-predictors, and Fig.~\ref{fig:hist} shows the corresponding
-histograms.
-
-\begin{table*}[htbp]
-\caption{Unconditional univariate statistics of the 20 quantitative
-predictors. The excess kurtosis of a uniform distribution is $-6/5$.}
-\label{tab:uncond}
-\centering
-\begin{tabular}{lrrrrr}
-\toprule
-Predictor & $\mu_d$ & $\sigma_d$ & $\gamma_d$ & Excess kurtosis & Range \\
-\midrule
-\input{tabelas/uncond}\\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{histogramas_incondicionais.png}
-\caption{Unconditional histograms of the 20 quantitative predictors.
-All but the body mass index are visibly flat-topped.}
-\label{fig:hist}
-\end{figure}
-
-% O achado: quase tudo e uniforme, nao gaussiano.
-Nearly every predictor shows a practically null skewness, ranging from
-$-0.015$ to $+0.008$, with the notable exception of BMI
-($\gamma = 0.432$). Such symmetry, however, does not imply normality,
-since a uniform density is strictly symmetric as well; the decisive
-quantity is the kurtosis. Nineteen of the twenty predictors have an
-excess kurtosis between $-1.21$ and $-1.19$, matching the theoretical
-value of $-6/5$ expected for a uniform distribution. This is
-corroborated by the histograms of Fig.~\ref{fig:hist}, which are
-visibly flat and truncated at round limits chosen for convenience
-rather than at physiological ones: age from 18 to 90 years, heart rate
-from 50 to 120 bpm, triglycerides from 60 to 400~mg/dL and sleep from
-3 to 10 hours. The reading these figures impose is that the predictors
-do not reflect measurements taken from real patients, but were drawn
-from predefined uniform distributions. This is the first of three
-analytical signals that will converge in Section~\ref{subsec:pca}.
-
-Body mass index escapes this otherwise general artificial pattern,
-showing a positive skewness and a kurtosis of $-0.45$ against the
-$-1.2$ of the remaining variables. The divergence arises because BMI
-was not drawn by the generator but computed algebraically as the
-quotient $\mathrm{weight}/\mathrm{height}^2$, and the ratio of two
-independent uniform variables is not itself uniform. The exception
-therefore confirms that reading rather than weakening it: BMI is the
-one predictor the generator did not draw.
-
-\subsection{Class-conditional analysis and discriminative power}
-\label{subsec:cond}
-
-% Bloco 2. O coracao do trabalho: algum preditor separa sozinho?
-Table~\ref{tab:discrim} reports the class-conditional means and ranks
-the predictors by the discriminative power of \eqref{eq:discrim};
-Fig.~\ref{fig:histcond} shows the class-conditional histograms and
-Fig.~\ref{fig:boxcond} the box-plots of the four strongest predictors.
+Table~\ref{tab:ols} summarises the OLS results. On the full training
+set $\mathbf{X}$ has numerical rank $228$ of $228$ and a condition
+number of about $3.1 \times 10^{4}$: it is badly conditioned but not
+exactly singular. The collinearity is visible in the coefficients.
+\texttt{NumSulfer} receives $-106.14$ and \texttt{FP134} receives
+$+105.95$, two values that nearly cancel, so that only their sum is
+well determined by the data.
 
 \begin{table}[htbp]
-\caption{Class-conditional means and discriminative power $\delta_d$,
-predictors sorted by $\delta_d$}
-\label{tab:discrim}
+\caption{OLS performance. CV values are the mean over 10 folds
+$\pm$ the standard error; the test interval is a $95\%$ bootstrap
+interval.}
+\label{tab:ols}
 \centering
-\begin{tabular}{lrrrr}
+\begin{tabular}{lll}
 \toprule
-Predictor & $\mu_{d|\mathrm{Low}}$ & $\mu_{d|\mathrm{Mod}}$
-& $\mu_{d|\mathrm{High}}$ & $\delta_d$ \\
+Set & RMSE & $R^2$ \\
 \midrule
-\input{tabelas/discrim}\\
+Training & $0.4900$ & $0.9426$ \\
+10-fold CV & $0.7279 \pm 0.0215$ & $0.8654 \pm 0.0128$ \\
+Test & $0.7430$ & $0.8718$ \\
+Test interval & $[0.6645,\ 0.8243]$ & $[0.8327,\ 0.9027]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{histogramas_condicionais.png}
-\caption{Class-conditional histograms of the 20 quantitative
-predictors, normalised to unit area.}
-\label{fig:histcond}
-\end{figure}
+The implementation agrees with scikit-learn to numerical precision. On
+the test set both give an RMSE of $0.742978$ and an $R^2$ of
+$0.871814$, with a largest difference of $1.5 \times 10^{-10}$ in the
+coefficients and of $5.4 \times 10^{-13}$ in the predictions. The two
+cross-validations differ by at most $1.3 \times 10^{-11}$ in the RMSE
+of any fold. In folds 4 and 7 the rank falls to $227$, since removing
+some compounds makes one column an exact combination of the others;
+this is where the pseudoinverse of \eqref{eq:ols} is indispensable.
+
+The gap between the training RMSE of $0.4900$ and the test RMSE of
+$0.7430$ indicates overfitting, with 228 coefficients estimated from
+951 compounds. Cross-validation anticipated the test performance well,
+as Fig.~\ref{fig:ols} shows. The test RMSE lies $0.0151$ above the CV
+mean, less than one standard error, and inside the $95\%$ interval of
+the CV mean, $[0.679,\ 0.777]$. The test $R^2$ likewise lies inside the
+corresponding interval, $[0.837,\ 0.894]$. The RMSE of individual folds
+ranges from $0.611$ to $0.853$, and the test points follow the diagonal
+across the whole solubility range.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{boxplots_condicionais.png}
-\caption{Class-conditional box-plots of the four most discriminative
-predictors.}
-\label{fig:boxcond}
+\includegraphics[width=\columnwidth]{ols_cv_vs_teste.png}
+\caption{OLS: RMSE per fold against the CV mean and the test RMSE
+(left), and observed against predicted solubility on the test set
+(right).}
+\label{fig:ols}
 \end{figure}
 
-% A resposta direta a pergunta do enunciado.
-The answer to whether any predictor separates the classes on its own
-is affirmative, and two markers stand out: fasting blood sugar
-($\delta = 1.44$) and HbA1c ($\delta = 1.38$). The discriminative
-capacity then falls substantially, to age ($\delta = 0.84$), BMI
-($\delta = 0.61$) and weight ($\delta = 0.57$). The remaining fifteen
-predictors all stay below $\delta = 0.5$, and ten of them below
-$\delta = 0.1$, a range in which the separation between groups is
-indistinguishable from noise.
+\subsection{Ridge regression}
+\label{subsec:res-ridge}
 
-% Os numeros clinicos que valem citar.
-From a clinical standpoint, the predictors with the greatest
-separating power display values and progressions that make full
-physiological sense \cite{ada2024}. HbA1c rises from $5.67\%$ in the
-low-risk class to $8.86\%$ in the high-risk one, which is exactly the
-transition from the normal to the diabetic range, while fasting blood
-sugar goes from $88.4$ to $152.8$~mg/dL, comfortably crossing the
-diagnostic threshold of 126~mg/dL. Age advances from $38.8$ to $56.5$
-years and BMI evolves from $25.6$ to $31.9$, a clear progression from
-overweight to obesity. Under this strict reading of isolated means,
-the dominant predictors are the clinically correct ones.
+The solution of \eqref{eq:ridge} matches the normal equations written
+with an explicit unpenalised intercept to within $7.1 \times 10^{-14}$,
+and the intercept obtained is exactly $\bar{y}$. Across the 29 values
+of $\lambda$ it also matches scikit-learn, with largest differences of
+$7.4 \times 10^{-9}$ in the coefficients, at $\lambda = 10^{-3}$, and
+of $1.2 \times 10^{-11}$ in the training predictions.
 
-% As tres criticas. Isto e leitura critica, nao descricao: vale ponto.
-Three observations qualify this apparent clinical fidelity.
-First, casual blood glucose has a practically null discriminative
-power ($\delta = 0.020$) and behaves as mere noise, whereas fasting
-blood sugar dominates the separation ($\delta = 1.44$). Since both
-measure the same physiological substrate and move together in a real
-patient, the generator evidently derived the labels from one and
-ignored the other.
-
-Second, waist circumference, although an established marker of
-metabolic and cardiovascular risk, does not separate the classes in
-this synthetic set ($\delta = 0.041$). In further contradiction with
-physiology, its mean value decreases slightly as the diabetic risk
-increases, from $100.85$ to $99.91$~cm.
-
-Third, mean height decreases from $173.7$ to $169.4$~cm as risk rises,
-with $\delta = 0.30$, which has no medical basis whatsoever. This
-distortion is a strictly algebraic consequence of BMI driving the
-assignment of the labels: at equal weight, shorter individuals have a
-mathematically larger BMI, so height inherits an inverted correlation
-with the disease that it would never hold in a real population.
-
-\subsection{Bivariate analysis}
-\label{subsec:bivar}
-
-% Bloco 3. Matriz de correlacao + scatter matrix.
-Fig.~\ref{fig:corr} shows the correlation matrix and
-Fig.~\ref{fig:scatter} the pairwise scatter plots, coloured by class.
+Fig.~\ref{fig:ridge} shows the cross-validation profile. For small
+$\lambda$ the RMSE is that of OLS ($0.7278$). It rises slightly to about
+$0.735$ near $\lambda = 0.1$, falls to its minimum at
+$\lambda \approx 31.6$, and then grows quickly to $1.3865$ at
+$\lambda = 10^{4}$, where the model is over-penalised. The minimum lies
+inside the grid, so the search range was sufficient. GridSearchCV
+selects the same $\lambda$, with a largest difference in the profiles
+of $3.4 \times 10^{-4}$ in the RMSE. This difference has an identified
+cause: \texttt{StandardScaler} divides by $n$ and our pre-processing by
+$n-1$. Rescaling the columns does not change the OLS predictions, but
+in ridge it is equivalent to a slight change of $\lambda$. Under the
+same convention the difference falls to $1.1 \times 10^{-13}$.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{matriz_correlacao.png}
-\caption{Pairwise Pearson correlation matrix of the 20 quantitative
-predictors.}
-\label{fig:corr}
+\includegraphics[width=\columnwidth]{ridge_perfil_cv.png}
+\caption{Ridge cross-validation profile of RMSE (left) and $R^2$
+(right), with the standard error of the mean over 10 folds.}
+\label{fig:ridge}
 \end{figure}
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{scatter_matrix.png}
-\caption{Pairwise scatter plots of the quantitative predictors on a
-random subsample of 3{,}000 observations, coloured by risk class.}
-\label{fig:scatter}
-\end{figure}
-
-% O segundo sinal: correlacoes nulas em quase todos os pares.
-The correlation matrix approaches an identity matrix closely, with a
-median absolute off-diagonal correlation of $0.003$. Only two pairs
-depart from this pattern of total independence: BMI with weight
-($\rho = +0.843$) and BMI with height ($\rho = -0.516$). These two
-coefficients, however, reflect nothing but the mathematical definition
-of the index itself, and are not an empirical or biological finding.
-Consistently with uniform and independent predictors, the point clouds
-of Fig.~\ref{fig:scatter} form rectangles devoid of latent structure,
-and no pair of variables separates the classes visually. This absence
-of linear dependence is the second signal.
-
-% O achado mais interessante da secao.
-The least plausible finding of the correlation matrix is that the only
-two predictors with relevant discriminative power are statistically
-uncorrelated with each other ($\rho = -0.005$). In a real patient
-HbA1c and fasting blood sugar are strongly correlated, since the
-former integrates the average glycaemia of the preceding weeks. Here
-the disease label depends on both variables along mathematically
-independent paths, which is physiologically impossible and is
-explained only by the rules of the generating process, and it is the
-sharpest illustration of that second signal.
-
-\subsection{Principal component analysis}
-\label{subsec:pca}
-
-% Bloco 4. O resultado mais forte, e ele e negativo. Tudo bem.
-Table~\ref{tab:eigen} lists the eigenvalue spectrum and
-Fig.~\ref{fig:pca} shows the projection onto the first two components.
+Table~\ref{tab:ridge} reports the final model, refitted on the whole
+training set. Scikit-learn gives the same test result, with a largest
+difference of $4.6 \times 10^{-14}$ in the predictions. Relative to
+OLS, the penalty reduced the test RMSE by $0.0255$ and the norm of the
+coefficients from $152.02$ to $1.48$. The collinear pair is the
+clearest case: \texttt{NumSulfer} and \texttt{FP134} become $-0.057$
+and $-0.056$, sharing the weight between two nearly duplicate
+predictors instead of opposing it.
 
 \begin{table}[htbp]
-\caption{Eigenvalue spectrum of the standardised covariance matrix
-($20$ components, $33{,}689$ complete observations)}
-\label{tab:eigen}
+\caption{Ridge performance with $\lambda \approx 31.6$. CV values are
+the mean over 10 folds $\pm$ the standard error; the test interval is a
+$95\%$ bootstrap interval.}
+\label{tab:ridge}
 \centering
-\begin{tabular}{lrrr}
+\begin{tabular}{lll}
 \toprule
-Component & $\lambda$ & Explained & Cumulative \\
+Set & RMSE & $R^2$ \\
 \midrule
-\input{tabelas/eigen}\\
+Training & $0.5438$ & $0.9293$ \\
+10-fold CV & $0.6862 \pm 0.0131$ & $0.8822 \pm 0.0077$ \\
+Test & $0.7175$ & $0.8805$ \\
+Test interval & $[0.6457,\ 0.7898]$ & $[0.8466,\ 0.9074]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+The cross-validated estimate is more optimistic than for OLS: the CV
+RMSE lies $0.0313$ below the test RMSE, about 2.4 standard errors. Part
+of this is expected, because $\lambda$ was chosen precisely by
+minimising that quantity. The CV RMSE still lies inside the bootstrap
+interval of the test RMSE, and the CV and test values of $R^2$ are
+close. The one-standard-error rule would select
+$\lambda \approx 56.2$, with practically the same test performance
+(RMSE $0.7178$, $R^2$ $0.8804$), so the exact value of $\lambda$ matters
+little in this region.
+
+\subsection{Partial least squares and neural network}
+\label{subsec:res-pls-nn}
+
+Fig.~\ref{fig:pls} shows the cross-validation profile of PLS in terms
+of RMSE and $R^2$. In the 10-fold CV evaluation across
+$A \in \{1,\dots,40\}$ components, the validation error drops steeply
+over the first ten latent factors, from an RMSE of $1.2895$
+($R^2 = 0.5856$) with one component to $0.7255$ ($R^2 = 0.8674$) with
+ten, and reaches its minimum at $A^* = 19$ components, with a
+mean CV RMSE of $0.7060 \pm 0.0159$ and $R^2$ of $0.8750 \pm 0.0090$.
+The profile is nearly flat between 12 and 22 components, where the
+differences are smaller than one standard error, and $R^2$ mirrors the
+RMSE throughout.
+Beyond $A = 25$, adding components slowly degrades validation
+performance as the projection approaches the unregularised OLS subspace.
+Refitted on the full training set with $A^* = 19$, PLS achieves a
+training RMSE of $0.5384$ ($R^2 = 0.9307$) and a test RMSE of $0.7337$
+($R^2 = 0.8750$, $95\%$ bootstrap interval $[0.6595,\ 0.8061]$). Applying
+the one-standard-error rule selects a more parsimonious model with
+$A_{1\mathrm{SE}} = 11$ components, yielding a slightly lower test
+error ($\mathrm{RMSE} = 0.7179$).
+
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{pca_projecao.png}
-\caption{Observations projected onto the first two principal
-components, coloured by risk class.}
-\label{fig:pca}
+\includegraphics[width=\columnwidth]{pls_perfil_cv.png}
+\caption{PLS cross-validation profile of RMSE (left) and $R^2$
+(right), with the standard error of the mean over 10 folds.}
+\label{fig:pls}
 \end{figure}
 
-% A assinatura dos autovalores: terceiro sinal, vindo de um terceiro
-% metodo.
-After standardisation the eigenvalues sum to 20, so a set of mutually
-uncorrelated predictors would yield twenty eigenvalues equal to $1$.
-That is very nearly what is observed: components PC2 to PC19 lie
-between $0.956$ and $1.037$, confined to a band of less than $5\%$
-around unity. Such a flat spectrum is the classical signature of an
-absence of linear structure. It constitutes the third independent
-signal, produced by a third statistical method, pointing at the same
-fact that the kurtosis analysis and the correlation matrix had already
-indicated.
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{rn_perfil_cv.png}
+\caption{Neural network 5-fold CV: RMSE over the training epochs for the
+four architectures with the selected weight decay and dropout (left),
+and best RMSE of each of the 24 configurations (right). Error bars show
+the standard error of the mean; the dotted line marks the 10-fold CV
+RMSE of PLS and the dashed line the selected 100 epochs.}
+\label{fig:nn-cv}
+\end{figure*}
 
-% As duas excecoes sao a mesma coisa: a identidade do IMC.
-The only departures from the flatness of the spectrum are the first
-component ($\lambda = 1.994$) and the last one ($\lambda = 0.0123$).
-The first concentrates its loadings almost exclusively on BMI
-($-0.706$), weight ($-0.602$) and height ($+0.372$), everything else
-staying below $0.02$ in absolute value, while the last mirrors exactly
-the same triple with BMI $+0.708$, weight $-0.603$ and height
-$+0.368$. The reading is that the analysis isolated, unprompted, the
-algebraic identity by which BMI is strictly derived from weight and
-height. The largest variance of the set therefore lies in the plane
-spanned by these three variables, and the near-null eigenvalue
-measures the almost deterministic dependence among them, almost and
-not exactly because the relation is non-linear and the method captures
-only its best linear approximation. It is the single structural
-relation present in the data.
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{rn_teste.png}
+\caption{Test set: observed against predicted solubility for PLS (left)
+and for the neural network ensemble (centre), and residuals of both
+models (right).}
+\label{fig:nn-test}
+\end{figure*}
 
-% Responder LITERALMENTE as tres perguntas do enunciado.
-Answering the three questions directly, the classes are not well
-separated in the projection, and are in fact separated \emph{worse}
-than in the univariate analysis of HbA1c or fasting blood sugar.
-Second, no linear decision boundary is visible that would distinguish
-the risk groups in the projected space. Finally, \emph{Moderate}
-overlaps \emph{High} heavily, while \emph{Low} becomes practically
-invisible, both because of its small sample size, only 470 points, and
-because it occupies the very same region as the other two.
+For the neural network, 5-fold cross-validation selected a single hidden
+layer of $64$ units with strong $L_2$ weight decay ($1.0$), dropout rate
+$0.3$, and $100$ training epochs, achieving a mean CV RMSE of $0.6289$.
+Strong regularisation proved essential to prevent rapid overfitting on
+the $951$ training compounds. Fig.~\ref{fig:nn-cv} summarises the
+search. With the selected weight decay and dropout, the network with 16
+hidden units has the highest error at every checkpoint, and the second
+layer of the $(64, 32)$ architecture does not improve on a single
+layer. The nine best configurations lie between $0.629$ and $0.637$, all
+within one standard error ($0.0204$) of the best, so the error surface
+is flat in that region. Averaging the predictions of an ensemble
+of $5$ independently initialised networks under this optimal configuration
+yielded a test RMSE of $0.6407$ ($95\%$ bootstrap interval
+$[0.5729,\ 0.7066]$) and a test $R^2$ of $0.9047$, substantially
+improving upon all linear specifications across the entire solubility
+range. Fig.~\ref{fig:nn-test} compares the test predictions with those
+of PLS: the observed-versus-predicted cloud of the network is tighter
+around the diagonal, and its residuals are smaller over most of the
+solubility range.
 
-% Paragrafo de fechamento: a tensao entre os dois achados.
-The apparent contradiction between the strong signal found in the
-univariate analysis and the absence of separation under PCA dissolves
-once it is understood that the two measure distinct properties. The
-first two components explain only $15.2\%$ of the variance because the
-spectrum is flat and no dominant direction exists to concentrate it.
-The projection fails to separate the classes for a different reason:
-the method maximises variance, not separability, and when the
-predictors are almost all independent there is no high-variance
-direction in which the class information happens to lie. Moreover, the
-single high-variance direction the set does possess, that of BMI, is
-merely an algebraic relation with no discriminative content of its
-own. PCA did not fail; it correctly reported that there is no
-multivariate structure to report.
+\subsection{Statistical comparison}
+\label{subsec:comparison}
+
+Table~\ref{tab:models} consolidates the four models. To assess whether
+the differences on the test set exceed the sampling uncertainty of 316
+compounds, we use a paired bootstrap \cite{efron1993}. Each of 5000
+resamples draws the test compounds with replacement and computes the
+RMSE of all models on the same compounds, so that the difficulty of the
+resample affects every model alike. For each pair of models,
+Table~\ref{tab:pairs} gives the $95\%$ percentile interval of
+$\mathrm{RMSE}_A - \mathrm{RMSE}_B$; a positive value favours model
+$B$. A difference is significant when the interval excludes zero.
+Since there are six simultaneous comparisons, the table also gives the
+interval with Bonferroni correction, at an individual level of
+$1 - 0.05/6$.
+
+\begin{table}[htbp]
+\caption{Consolidated results. CV is 10-fold for the linear models and
+5-fold for the neural network. Interval: $95\%$ bootstrap interval of
+the test RMSE.}
+\label{tab:models}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+Model & CV RMSE & Test RMSE & Interval & Test $R^2$ \\
+\midrule
+OLS & $0.7279$ & $0.7430$ & $[0.6645,\ 0.8243]$ & $0.8718$ \\
+Ridge & $0.6862$ & $0.7175$ & $[0.6457,\ 0.7898]$ & $0.8805$ \\
+PLS & $0.7060$ & $0.7337$ & $[0.6595,\ 0.8061]$ & $0.8750$ \\
+Neural net. & $0.6289$ & $0.6407$ & $[0.5729,\ 0.7066]$ & $0.9047$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Paired bootstrap of $\mathrm{RMSE}_A - \mathrm{RMSE}_B$ on the
+test set (5000 resamples)}
+\label{tab:pairs}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+$A$ $-$ $B$ & Diff. & $95\%$ interval & Bonferroni interval \\
+\midrule
+OLS $-$ Ridge & $0.0255$ & $[-0.0075,\ 0.0593]$ & $[-0.0195,\ 0.0706]$ \\
+OLS $-$ PLS & $0.0093$ & $[-0.0248,\ 0.0455]$ & $[-0.0366,\ 0.0573]$ \\
+OLS $-$ NN & $0.1023$ & $[0.0524,\ 0.1538]$ & $[0.0322,\ 0.1715]$ \\
+Ridge $-$ PLS & $-0.0162$ & $[-0.0350,\ 0.0020]$ & $[-0.0425,\ 0.0076]$ \\
+Ridge $-$ NN & $0.0768$ & $[0.0416,\ 0.1138]$ & $[0.0268,\ 0.1262]$ \\
+PLS $-$ NN & $0.0930$ & $[0.0498,\ 0.1395]$ & $[0.0325,\ 0.1564]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No difference among the three linear models is significant. Ridge has
+the lowest test RMSE of the group, and it beat PLS in $95.8\%$ of the
+resamples, but the interval of that pair, $[-0.0350,\ 0.0020]$, still
+contains zero, and the same holds for the pairs involving OLS. The test
+set therefore does not support ranking the linear models, even though
+cross-validation places ridge first.
+
+The neural network is significantly better than each linear model, with
+or without the Bonferroni correction. Its test RMSE is lower by
+$0.1023$ than that of OLS, by $0.0768$ than that of ridge and by
+$0.0930$ than that of PLS, and it won in at least $99.98\%$ of the
+resamples in all three pairs. The cross-validated values point the same
+way, although they are not strictly comparable, since the network used
+5 folds and the linear models 10.
 
 % =====================================================================
 % IV. CONCLUSION
@@ -583,28 +444,28 @@ multivariate structure to report.
 \section{Conclusion}
 \label{sec:conclusion}
 
-The exploratory analysis produced three independent pieces of evidence
-that converge on the same fact: the uniform kurtosis of nineteen of
-the twenty predictors, the median of $0.003$ among the off-diagonal
-correlations, and the flat eigenvalue spectrum. Together they indicate
-that the predictors were sampled from independent uniform
-distributions over round numerical intervals, and that the diagnostic
-label was assigned afterwards as a function of a restricted group of
-variables, chiefly fasting blood sugar, HbA1c, age and BMI.
-Consequently the only structural interdependence present in this
-dataset is strictly algebraic, with no grounding in real physiology.
+Four regression models were fitted to predict solubility from 228
+molecular descriptors, with pre-processing and hyperparameters
+determined on the training set only. The OLS, ridge, and PLS estimators
+and their cross-validation were implemented from scratch and agree with
+the built-in functions to numerical precision.
 
-In practical terms, a synthetic dataset with these characteristics
-serves perfectly well to exercise the methodological flow of data
-analysis, which is the scope and the objective of this work. It is,
-on the other hand, strictly inadequate as a basis for clinical
-conclusions or for realistically testing multivariate methods,
-precisely because the covariance those algorithms exist to exploit was
-suppressed at generation time. A classifier trained here would reach a
-very high apparent performance while relying on two predictors alone,
-and that behaviour would not transfer to real medical records.
-Recording and documenting this structural artificiality is, in itself,
-the most robust result this exploratory analysis delivers.
+The three linear models reached test RMSE values of $0.7430$ (OLS),
+$0.7175$ (ridge) and $0.7337$ (PLS), with $R^2$ between $0.8718$ and
+$0.8805$, and the paired bootstrap found no significant difference among
+them. Regularisation changed the coefficients far more than the
+predictions: ridge reduced the norm of the coefficients from $152.02$ to
+$1.48$ while lowering the test RMSE by only $0.0255$.
+
+The neural network reached a test RMSE of $0.6407$ and an $R^2$ of
+$0.9047$, significantly better than every linear model, with a reduction
+of $10.7\%$ in RMSE against ridge, the best linear model. This indicates
+that the relationship between the predictors and solubility is not purely
+linear. Since the linear models already explain about $87\%$ to $88\%$ of
+the variance on the test set, the relationship appears predominantly
+linear with a smaller nonlinear component. These conclusions rest on a
+single test set of 316 compounds, as reflected in the width of the
+intervals of Table~\ref{tab:models}.
 
 % =====================================================================
 % Declaracao de uso de IA. O enunciado permite que os prompts e as
@@ -612,13 +473,13 @@ the most robust result this exploratory analysis delivers.
 % estao, para nao ocupar as 6 paginas do artigo.
 \section*{Use of AI Tools}
 AI assistance (Anthropic Claude) was used in this work for code
-debugging, for verification queries over the dataset, for structuring
-the text and for checking the references. The prompts, the responses
-and the use made of each are recorded in \texttt{USO\_DE\_IA.md} in
-the project repository.
+debugging, for verification queries over the cross-validation and
+model results, for structuring the text and for checking the
+references. The prompts, the responses and the use made of each are
+recorded in \texttt{USO\_DE\_IA.md} in the project repository.
 
 % =====================================================================
-% REFERENCES -- minimo 5 ou 6.
+% REFERENCES
 % =====================================================================
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

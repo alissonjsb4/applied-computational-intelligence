@@ -21,32 +21,38 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
-\bibitem{idf2021}
-\BIBentryALTinterwordspacing
-{International Diabetes Federation}, ``Idf diabetes atlas,'' International
-  Diabetes Federation, Brussels, Belgium, Tech. Rep., 2025. [Online].
-  Available: \url{https://diabetesatlas.org}
-\BIBentrySTDinterwordspacing
+\bibitem{kuhn2013}
+M.~Kuhn and K.~Johnson, \emph{Applied Predictive Modeling}.\hskip 1em plus
+  0.5em minus 0.4em\relax New York: Springer, 2013.
 
-\bibitem{synthetic2021}
-A.~Gonzales, G.~Guruswamy, and S.~R. Smith, ``Synthetic data in health care: A
-  narrative review,'' \emph{PLOS Digital Health}, vol.~2, no.~1, p. e0000082,
-  2023.
+\bibitem{hastie2009}
+T.~Hastie, R.~Tibshirani, and J.~Friedman, \emph{The Elements of Statistical
+  Learning}, 2nd~ed.\hskip 1em plus 0.5em minus 0.4em\relax New York: Springer,
+  2009.
 
-\bibitem{kaggle2024}
-\BIBentryALTinterwordspacing
-M.~Fatimah, ``Diabetes risk prediction dataset (50{,}000 patients),'' Kaggle,
-  synthetic healthcare dataset. [Online]. Available:
-  \url{https://www.kaggle.com/datasets/mobeenfatimah/diabetes-risk-prediction-dataset-50k-patients}
-\BIBentrySTDinterwordspacing
+\bibitem{golub2013}
+G.~H. Golub and C.~F. Van~Loan, \emph{Matrix Computations}, 4th~ed.\hskip 1em
+  plus 0.5em minus 0.4em\relax Baltimore: Johns Hopkins University Press, 2013.
 
-\bibitem{jolliffe2002}
-I.~T. Jolliffe, \emph{Principal Component Analysis}, 2nd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax New York: Springer, 2002.
+\bibitem{hoerl1970}
+A.~E. Hoerl and R.~W. Kennard, ``Ridge regression: Biased estimation for
+  nonorthogonal problems,'' \emph{Technometrics}, vol.~12, no.~1, pp. 55--67,
+  1970.
 
-\bibitem{ada2024}
-{American Diabetes Association Professional Practice Committee}, ``2. diagnosis
-  and classification of diabetes: Standards of care in diabetes---2026,''
-  \emph{Diabetes Care}, vol.~49, no. Supplement 1, pp. S27--S49, 2026.
+\bibitem{pedregosa2011}
+F.~Pedregosa, G.~Varoquaux, A.~Gramfort, V.~Michel, B.~Thirion, O.~Grisel,
+  M.~Blondel, P.~Prettenhofer, R.~Weiss, V.~Dubourg, J.~Vanderplas, A.~Passos,
+  D.~Cournapeau, M.~Brucher, M.~Perrot, and {\'E}.~Duchesnay, ``Scikit-learn:
+  Machine learning in {P}ython,'' \emph{Journal of Machine Learning Research},
+  vol.~12, pp. 2825--2830, 2011.
+
+\bibitem{yeo2000}
+I.-K. Yeo and R.~A. Johnson, ``A new family of power transformations to improve
+  normality or symmetry,'' \emph{Biometrika}, vol.~87, no.~4, pp. 954--959,
+  2000.
+
+\bibitem{efron1993}
+B.~Efron and R.~J. Tibshirani, \emph{An Introduction to the Bootstrap}.\hskip
+  1em plus 0.5em minus 0.4em\relax New York: Chapman \& Hall, 1993.
 
 \end{thebibliography}
